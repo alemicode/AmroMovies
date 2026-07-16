@@ -3,7 +3,6 @@ package com.alemicode.amromovies.core.common
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
-/** Injected instead of referencing [Dispatchers] directly, so tests can substitute a single test dispatcher. */
 interface DispatcherProvider {
     val io: CoroutineDispatcher
     val default: CoroutineDispatcher
