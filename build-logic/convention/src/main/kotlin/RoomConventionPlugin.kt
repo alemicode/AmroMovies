@@ -5,7 +5,7 @@ import org.gradle.kotlin.dsl.dependencies
 
 /**
  * Applies KSP and wires Room's runtime/ktx/compiler artifacts. Schema export location is
- * left to the consuming module's own `build.gradle.kts` (e.g. `core:database`) since it's
+ * left to the consuming module's own `build.gradle.kts` (e.g. `feature:movies`) since it's
  * genuinely per-module, not something a shared convention should hardcode.
  */
 class RoomConventionPlugin : Plugin<Project> {
@@ -21,11 +21,5 @@ class RoomConventionPlugin : Plugin<Project> {
                 add("testImplementation", libs.findLibrary("androidx-room-testing").get())
             }
         }
-    }
-}
-
-class MyConverntionPlugin: Plugin<Project>{
-    override fun apply(target: Project) {
-
     }
 }
