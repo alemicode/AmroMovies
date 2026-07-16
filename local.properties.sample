@@ -1,0 +1,6 @@
+# Copy this file to `local.properties` (already gitignored) and fill in the value below.
+# sdk.dir is normally written automatically by Android Studio - you don't need to set it by hand.
+
+# TMDB v4 "Read Access Token" (Bearer auth), NOT the v3 API key.
+# Get one at https://www.themoviedb.org/settings/api after creating a free TMDB account.
+TMDB_READ_ACCESS_TOKEN=your-tmdb-v4-read-access-token
