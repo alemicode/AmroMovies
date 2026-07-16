@@ -9,9 +9,9 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
 
 /**
- * Base convention for every plain Kotlin/Android library module: applies the Android Library +
- * Kotlin Android plugins, shared SDK/Java config, JUnit5 as the unit-test runner, and the
- * common test dependency set (JUnit5, MockK, Turbine, AssertK, coroutines-test).
+ * Base convention for every plain Kotlin/Android library module: applies the Android Library
+ * plugin, shared SDK/Java config, JUnit5 as the unit-test runner, and the common test dependency
+ * set (JUnit5, MockK, Turbine, AssertK, coroutines-test).
  *
  * `core:*` modules apply this directly; `feature:*` modules get it transitively via
  * [AndroidFeatureConventionPlugin].
@@ -19,10 +19,10 @@ import org.gradle.kotlin.dsl.withType
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            with(pluginManager) {
-                apply("com.android.library")
-                apply("org.jetbrains.kotlin.android")
-            }
+            // AGP 9's "Built-in Kotlin" (https://developer.android.com/r/tools/built-in-kotlin)
+            // compiles Kotlin sources itself and registers its own `kotlin` extension - applying
+            // org.jetbrains.kotlin.android on top of that throws a duplicate-extension error.
+            pluginManager.apply("com.android.library")
 
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(this)

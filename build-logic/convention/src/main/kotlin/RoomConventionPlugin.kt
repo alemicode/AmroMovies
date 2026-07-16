@@ -23,3 +23,9 @@ class RoomConventionPlugin : Plugin<Project> {
         }
     }
 }
+
+class MyConverntionPlugin: Plugin<Project>{
+    override fun apply(target: Project) {
+
+    }
+}
