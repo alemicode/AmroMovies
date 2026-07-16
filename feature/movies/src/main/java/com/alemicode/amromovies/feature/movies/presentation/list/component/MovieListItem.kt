@@ -1,4 +1,4 @@
-package com.alemicode.amromovies.feature.movies.presentation.list
+package com.alemicode.amromovies.feature.movies.presentation.list.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,17 +24,15 @@ import com.alemicode.amromovies.designsystem.theme.AmroShapes
 import com.alemicode.amromovies.designsystem.theme.AmroTheme
 import com.alemicode.amromovies.designsystem.theme.ThemePreviews
 import com.alemicode.amromovies.designsystem.theme.space
-import com.alemicode.amromovies.feature.movies.domain.model.Genre
-import com.alemicode.amromovies.feature.movies.domain.model.Movie
-import kotlinx.datetime.LocalDate
+import com.alemicode.amromovies.feature.movies.presentation.list.MovieUi
 
 private val PosterWidth = 100.dp
 private const val PosterAspectRatio = 2f / 3f
 
 @Composable
 fun MovieListItem(
-    movie: Movie,
-    onClick: (Movie) -> Unit,
+    movie: MovieUi,
+    onClick: (MovieUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -66,7 +64,7 @@ fun MovieListItem(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.space.space4)) {
                     Text(
-                        text = movie.genres.joinToString(" • ") { it.name },
+                        text = movie.genreLabel,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -81,9 +79,9 @@ fun MovieListItem(
                     )
                 }
 
-                movie.releaseDate?.let { date ->
+                movie.year?.let { year ->
                     AmroPill(
-                        text = date.year.toString(),
+                        text = year,
                         modifier = Modifier.align(Alignment.End),
                     )
                 }
@@ -98,33 +96,22 @@ private fun MovieListItemPreview() {
     AmroTheme {
         Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.space.space16)) {
             MovieListItem(
-                movie = Movie(
+                movie = MovieUi(
                     id = 1,
                     title = "Spiderman Across The Spider Verse",
                     posterUrl = null,
-                    genres = listOf(
-                        Genre(1, "Action"),
-                        Genre(2, "Comedy"),
-                        Genre(3, "Super Hero"),
-                        Genre(4, "Animation"),
-                    ),
-                    popularity = 900.0,
-                    releaseDate = LocalDate(2023, 6, 2),
+                    genreLabel = "Action • Comedy • Super Hero • Animation",
+                    year = "2023",
                 ),
                 onClick = {},
             )
             MovieListItem(
-                movie = Movie(
+                movie = MovieUi(
                     id = 2,
                     title = "Interstellar",
                     posterUrl = null,
-                    genres = listOf(
-                        Genre(5, "Adventure"),
-                        Genre(6, "Mystery"),
-                        Genre(7, "Drama"),
-                    ),
-                    popularity = 700.0,
-                    releaseDate = LocalDate(2016, 11, 6),
+                    genreLabel = "Adventure • Mystery • Drama",
+                    year = "2016",
                 ),
                 onClick = {},
             )

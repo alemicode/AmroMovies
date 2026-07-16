@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="movies_list_title">Trending This Week</string>
+    <string name="movies_list_error_title">Something went wrong</string>
+    <string name="movies_list_error_message">Check your connection and try again.</string>
+    <string name="action_retry">Retry</string>
+    <string name="sort_field_popularity">Popularity</string>
+    <string name="sort_field_title">Title</string>
+    <string name="sort_field_release_date">Release Date</string>
+    <string name="sort_order_ascending">Ascending</string>
+    <string name="sort_order_descending">Descending</string>
+</resources>
