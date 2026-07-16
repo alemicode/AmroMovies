@@ -5,10 +5,6 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 
-/**
- * Adds Jetpack Compose to a module: the Compose compiler plugin, `buildFeatures.compose`,
- * the Compose BOM, and the baseline UI/tooling/test dependencies every Compose-using module needs.
- */
 class AndroidComposeConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {

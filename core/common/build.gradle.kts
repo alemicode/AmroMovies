@@ -1,5 +1,6 @@
 plugins {
     id("amro.android.library")
+    id("amro.koin")
 }
 
 android {
