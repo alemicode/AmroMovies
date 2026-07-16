@@ -7,11 +7,6 @@ import com.alemicode.amromovies.feature.movies.data.local.entity.GenreEntity
 import com.alemicode.amromovies.feature.movies.data.local.entity.MovieDetailEntity
 import com.alemicode.amromovies.feature.movies.data.local.entity.MovieEntity
 
-/**
- * Owned entirely by this feature - not a shared `core:database`. Room's @Database class must
- * reference its entity classes directly, so a shared database module would need a dependency
- * back on this feature for [MovieEntity]; keeping it here avoids that inversion.
- */
 @Database(
     entities = [
         MovieEntity::class,

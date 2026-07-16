@@ -13,7 +13,7 @@ class LocalMoviesDataSource(private val dao: MoviesDao) {
 
     suspend fun getGenres(): List<GenreEntity> = dao.getGenres()
 
-    suspend fun replaceGenres(genres: List<GenreEntity>) = dao.insertGenres(genres)
+    suspend fun insertGenres(genres: List<GenreEntity>) = dao.insertGenres(genres)
 
     suspend fun getMovieDetail(movieId: Int): MovieDetailEntity? = dao.getMovieDetail(movieId)
 
