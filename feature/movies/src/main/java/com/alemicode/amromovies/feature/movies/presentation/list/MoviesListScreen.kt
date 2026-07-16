@@ -226,7 +226,7 @@ private fun MoviesListScreenLoadingPreview() {
 private fun MoviesListScreenErrorPreview() {
     AmroTheme {
         MoviesListScreen(
-            state = MoviesListState(hasError = true),
+            state = MoviesListState(isLoading = false, hasError = true),
             onAction = {},
         )
     }

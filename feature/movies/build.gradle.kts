@@ -2,6 +2,7 @@ plugins {
     id("amro.android.feature")
     id("amro.room")
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.paparazzi)
 }
 
 android {

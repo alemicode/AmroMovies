@@ -41,6 +41,6 @@ fun MovieDetail.toMovieDetailUi(): MovieDetailUi = MovieDetailUi(
     imdbUrl = imdbUrl,
     runtime = runtimeMinutes?.takeIf { it > 0 }?.let { "${it / 60}h ${it % 60}m" },
     releaseDate = releaseDate?.let {
-        "${it.month.name.lowercase().replaceFirstChar(Char::uppercase)} ${it.dayOfMonth}, ${it.year}"
+        "${it.month.name.lowercase().replaceFirstChar(Char::uppercase)} ${it.day}, ${it.year}"
     },
 )

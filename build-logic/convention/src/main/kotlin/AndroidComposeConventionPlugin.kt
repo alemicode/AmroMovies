@@ -27,6 +27,8 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
 
                 add("androidTestImplementation", platform(bom))
                 add("androidTestImplementation", libs.findLibrary("androidx-compose-ui-test-junit4").get())
+                add("androidTestImplementation", libs.findLibrary("androidx-junit").get())
+                add("androidTestImplementation", libs.findLibrary("assertk").get())
             }
         }
     }

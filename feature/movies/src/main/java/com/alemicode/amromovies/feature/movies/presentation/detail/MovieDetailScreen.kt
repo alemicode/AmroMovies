@@ -309,7 +309,7 @@ private fun MovieDetailScreenLoadingPreview() {
 private fun MovieDetailScreenErrorPreview() {
     AmroTheme {
         MovieDetailScreen(
-            state = MovieDetailState(hasError = true),
+            state = MovieDetailState(isLoading = false, hasError = true),
             onAction = {},
             onBackClick = {},
         )
