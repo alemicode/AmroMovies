@@ -8,6 +8,10 @@ android {
     namespace = "com.alemicode.amromovies.feature.movies"
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     // Generic networking infra only (OkHttpClient, Retrofit instance, auth interceptor,
     // safeApiCall). The TMDB-specific API interface and DTOs are owned by this module.

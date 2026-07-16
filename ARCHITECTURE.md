@@ -77,11 +77,14 @@ whoever is *building* the thing.
 4. **Images: Coil 3** (Compose-first, `AsyncImage`).
 5. **Navigation: Compose Navigation, type-safe routes** (`@Serializable` route objects).
    `feature:movies` exposes its own graph builder; `app`'s `NavHost` includes it.
-6. **Caching (offline-first, single source of truth):**
-   - Trending list + genres: fetch TMDB pages 1-5, write to Room, UI always reads from a Room
-     `Flow`. `lastFetchedAt` timestamp drives staleness (~1h); pull-to-refresh always forces a
-     network hit.
-   - Movie detail: network-first per id, Room as fallback/cache, refreshed on stale revisit.
+6. **Caching (offline-first, single source of truth), refresh is action-driven, not time-driven:**
+   request -> write to Room -> read from Room -> display, always through that same path so the UI
+   never renders anything the cache didn't see first.
+   - Trending list + genres: fetch TMDB pages 1-5, replace the Room cache. Triggered once when the
+     list screen/ViewModel is created (app open) and again on pull-to-refresh - no staleness
+     timestamp, no time-based auto-refresh. The UI continuously observes the cache via a Room
+     `Flow`, so it still renders the last successful fetch if a refresh fails or while offline.
+   - Movie detail: same pattern per id - fetch, write, read, display - triggered on screen open.
    - Filtering/sorting run **in-memory** over the ~100 cached items (`derivedStateOf` / pure
      functions) - no DB queries needed. Matches the brief's "filter what's shown, don't backfill."
 7. **Testing: JUnit5 + MockK + Turbine + AssertK.** `core:testing` exposes these as `api` deps
