@@ -6,6 +6,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 
 private val AmroDarkColorScheme = darkColorScheme(
     primary = AmroPrimary,
@@ -38,9 +39,14 @@ fun AmroTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalSpace provides Space()) {
+    val themeController = remember { ThemeController(darkTheme) }
+
+    CompositionLocalProvider(
+        LocalSpace provides Space(),
+        LocalThemeController provides themeController,
+    ) {
         MaterialTheme(
-            colorScheme = if (darkTheme) AmroDarkColorScheme else AmroLightColorScheme,
+            colorScheme = if (themeController.isDarkTheme) AmroDarkColorScheme else AmroLightColorScheme,
             typography = AmroTypography,
             content = content,
         )

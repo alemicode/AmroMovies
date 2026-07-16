@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alemicode.amromovies.designsystem.components.AmroButton
-import com.alemicode.amromovies.designsystem.event.ObserveAsEvents
+import com.alemicode.amromovies.designsystem.components.AmroThemeToggleButton
 import com.alemicode.amromovies.designsystem.theme.AmroTheme
 import com.alemicode.amromovies.designsystem.theme.ThemePreviews
 import com.alemicode.amromovies.designsystem.theme.space
@@ -42,15 +45,14 @@ fun MoviesListRoot(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    ObserveAsEvents(viewModel.events) { event ->
-        when (event) {
-            is MoviesListEvent.NavigateToDetail -> onMovieClick(event.movieId)
-        }
-    }
-
     MoviesListScreen(
         state = state,
-        onAction = viewModel::onAction,
+        onAction = { action ->
+            when (action) {
+                is MoviesListAction.OnMovieClick -> onMovieClick(action.movieId)
+                else -> viewModel.onAction(action)
+            }
+        },
         modifier = modifier,
     )
 }
@@ -100,12 +102,12 @@ private fun ErrorContent(onRetry: () -> Unit, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.movies_list_error_title),
+            text = stringResource(R.string.generic_error_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Text(
-            text = stringResource(R.string.movies_list_error_message),
+            text = stringResource(R.string.generic_error_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -119,16 +121,24 @@ private fun MoviesListContent(
     onAction: (MoviesListAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        Text(
-            text = stringResource(R.string.movies_list_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(
-                horizontal = MaterialTheme.space.space16,
-                vertical = MaterialTheme.space.space16,
-            ),
-        )
+    Column(modifier = modifier.fillMaxSize().statusBarsPadding()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.space.space16,
+                    vertical = MaterialTheme.space.space16,
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.movies_list_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            AmroThemeToggleButton()
+        }
 
         GenreFilterRow(
             genreFilters = state.genreFilters,

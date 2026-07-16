@@ -1,12 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="movies_list_title">Trending This Week</string>
-    <string name="movies_list_error_title">Something went wrong</string>
-    <string name="movies_list_error_message">Check your connection and try again.</string>
+    <string name="generic_error_title">Something went wrong</string>
+    <string name="generic_error_message">Check your connection and try again.</string>
     <string name="action_retry">Retry</string>
     <string name="sort_field_popularity">Popularity</string>
     <string name="sort_field_title">Title</string>
     <string name="sort_field_release_date">Release Date</string>
     <string name="sort_order_ascending">Ascending</string>
     <string name="sort_order_descending">Descending</string>
+
+    <string name="cd_navigate_back">Navigate back</string>
+    <string name="movie_detail_overview_title">Overview</string>
+    <string name="movie_detail_vote_count_format">%1$s votes</string>
+    <string name="movie_detail_budget_label">Budget</string>
+    <string name="movie_detail_revenue_label">Revenue</string>
+    <string name="movie_detail_status_label">Status</string>
+    <string name="movie_detail_runtime_label">Runtime</string>
+    <string name="movie_detail_release_date_label">Release Date</string>
+    <string name="movie_detail_not_available">N/A</string>
+    <string name="movie_detail_view_on_imdb">View on IMDB</string>
 </resources>

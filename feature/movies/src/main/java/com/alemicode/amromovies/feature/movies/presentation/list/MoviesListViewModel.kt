@@ -3,105 +3,95 @@ package com.alemicode.amromovies.feature.movies.presentation.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alemicode.amromovies.core.common.Result
-import com.alemicode.amromovies.feature.movies.domain.model.SortField
+import com.alemicode.amromovies.feature.movies.domain.model.Movie
 import com.alemicode.amromovies.feature.movies.domain.model.SortOrder
 import com.alemicode.amromovies.feature.movies.domain.usecase.GetTrendingMoviesUseCase
 import com.alemicode.amromovies.feature.movies.domain.usecase.RefreshTrendingMoviesUseCase
 import com.alemicode.amromovies.feature.movies.domain.usecase.filteredByGenre
 import com.alemicode.amromovies.feature.movies.domain.usecase.sortedByField
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-private data class FilterAndSort(
-    val genreId: Int?,
-    val field: SortField,
-    val order: SortOrder,
-)
 
 class MoviesListViewModel(
     private val getTrendingMovies: GetTrendingMoviesUseCase,
     private val refreshTrendingMovies: RefreshTrendingMoviesUseCase,
 ) : ViewModel() {
 
-    private val selectedGenreId = MutableStateFlow<Int?>(null)
-    private val sortField = MutableStateFlow(SortField.POPULARITY)
-    private val sortOrder = MutableStateFlow(SortOrder.DESCENDING)
-    private val isLoading = MutableStateFlow(true)
-    private val hasError = MutableStateFlow(false)
+    private var cachedMovies: List<Movie> = emptyList()
 
-    private val _state = MutableStateFlow(MoviesListState(isLoading = true))
-    val state = _state.asStateFlow()
-
-    private val _events = Channel<MoviesListEvent>()
-    val events = _events.receiveAsFlow()
-
-    init {
-        observeMovies()
-        refresh()
-    }
+    private val _state = MutableStateFlow(MoviesListState())
+    val state = _state
+        .onStart {
+            observeMovies()
+            refresh()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), _state.value)
 
     fun onAction(action: MoviesListAction) {
         when (action) {
-            is MoviesListAction.OnGenreSelected -> selectedGenreId.value = action.genreId
-            is MoviesListAction.OnSortFieldSelected -> sortField.value = action.field
-            MoviesListAction.OnToggleSortOrder -> sortOrder.update {
-                if (it == SortOrder.ASCENDING) SortOrder.DESCENDING else SortOrder.ASCENDING
+            is MoviesListAction.OnGenreSelected -> {
+                _state.update { it.copy(selectedGenreId = action.genreId) }
+                applyFilterAndSort()
             }
-            is MoviesListAction.OnMovieClick -> viewModelScope.launch {
-                _events.send(MoviesListEvent.NavigateToDetail(action.movieId))
+            is MoviesListAction.OnSortFieldSelected -> {
+                _state.update { it.copy(sortField = action.field) }
+                applyFilterAndSort()
+            }
+            MoviesListAction.OnToggleSortOrder -> {
+                _state.update {
+                    val nextOrder = if (it.sortOrder == SortOrder.ASCENDING) {
+                        SortOrder.DESCENDING
+                    } else {
+                        SortOrder.ASCENDING
+                    }
+                    it.copy(sortOrder = nextOrder)
+                }
+                applyFilterAndSort()
             }
             MoviesListAction.OnRetryClick -> refresh()
+            is MoviesListAction.OnMovieClick -> Unit
         }
     }
 
     private fun observeMovies() {
-        val filterAndSort = combine(selectedGenreId, sortField, sortOrder) { genreId, field, order ->
-            FilterAndSort(genreId, field, order)
-        }
+        getTrendingMovies()
+            .onEach { movies ->
+                cachedMovies = movies
+                applyFilterAndSort()
+            }
+            .launchIn(viewModelScope)
+    }
 
-        combine(
-            getTrendingMovies(),
-            filterAndSort,
-            isLoading,
-            hasError,
-        ) { movies, filterAndSortValue, loading, error ->
-            val selectedGenre = movies
+    private fun applyFilterAndSort() {
+        _state.update { current ->
+            val selectedGenre = cachedMovies
                 .flatMap { it.genres }
                 .distinctBy { it.id }
-                .firstOrNull { it.id == filterAndSortValue.genreId }
+                .firstOrNull { it.id == current.selectedGenreId }
 
-            val visibleMovies = movies
-                .filteredByGenre(selectedGenre)
-                .sortedByField(filterAndSortValue.field, filterAndSortValue.order)
-
-            MoviesListState(
-                movies = visibleMovies.map { it.toMovieUi() },
-                genreFilters = movies.toGenreFilters(filterAndSortValue.genreId),
-                sortField = filterAndSortValue.field,
-                sortOrder = filterAndSortValue.order,
-                isLoading = loading,
-                hasError = error && movies.isEmpty(),
+            current.copy(
+                movies = cachedMovies
+                    .filteredByGenre(selectedGenre)
+                    .sortedByField(current.sortField, current.sortOrder)
+                    .map { it.toMovieUi() },
+                genreFilters = cachedMovies.toGenreFilters(current.selectedGenreId),
             )
-        }.onEach { newState ->
-            _state.value = newState
-        }.launchIn(viewModelScope)
+        }
     }
 
     private fun refresh() {
         viewModelScope.launch {
-            isLoading.value = true
+            _state.update { it.copy(isLoading = true) }
             when (refreshTrendingMovies()) {
-                is Result.Success -> hasError.value = false
-                is Result.Error -> hasError.value = true
+                is Result.Success -> _state.update { it.copy(isLoading = false, hasError = false) }
+                is Result.Error -> _state.update { it.copy(isLoading = false, hasError = cachedMovies.isEmpty()) }
             }
-            isLoading.value = false
         }
     }
 }

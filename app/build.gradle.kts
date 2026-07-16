@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("amro.koin")
 }
 
 android {
@@ -34,6 +35,14 @@ android {
 }
 
 dependencies {
+    implementation(project(":design-system"))
+    implementation(project(":core:common"))
+    implementation(project(":core:network"))
+    implementation(project(":feature:movies"))
+
+    implementation(libs.koin.android)
+    implementation(libs.androidx.navigation.compose)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

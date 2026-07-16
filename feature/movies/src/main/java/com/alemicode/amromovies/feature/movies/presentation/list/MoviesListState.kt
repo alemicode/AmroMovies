@@ -8,8 +8,9 @@ import com.alemicode.amromovies.feature.movies.domain.model.SortOrder
 data class MoviesListState(
     val movies: List<MovieUi> = emptyList(),
     val genreFilters: List<GenreFilterUi> = emptyList(),
+    val selectedGenreId: Int? = null,
     val sortField: SortField = SortField.POPULARITY,
     val sortOrder: SortOrder = SortOrder.DESCENDING,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val hasError: Boolean = false,
 )
