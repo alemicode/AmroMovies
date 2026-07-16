@@ -30,7 +30,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 add("testRuntimeOnly", libs.findLibrary("junit-platform-launcher").get())
                 add("testImplementation", libs.findLibrary("junit-jupiter-params").get())
                 add("testImplementation", libs.findLibrary("mockk").get())
-                add("testImplementation", libs.findLibrary("turbine").get())
                 add("testImplementation", libs.findLibrary("assertk").get())
                 add("testImplementation", libs.findLibrary("kotlinx-coroutines-test").get())
             }

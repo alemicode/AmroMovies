@@ -70,14 +70,9 @@ class MoviesListViewModel(
 
     private fun applyFilterAndSort() {
         _state.update { current ->
-            val selectedGenre = cachedMovies
-                .flatMap { it.genres }
-                .distinctBy { it.id }
-                .firstOrNull { it.id == current.selectedGenreId }
-
             current.copy(
                 movies = cachedMovies
-                    .filteredByGenre(selectedGenre)
+                    .filteredByGenre(current.selectedGenreId)
                     .sortedByField(current.sortField, current.sortOrder)
                     .map { it.toMovieUi() },
                 genreFilters = cachedMovies.toGenreFilters(current.selectedGenreId),

@@ -9,6 +9,9 @@
     <string name="sort_field_release_date">Release Date</string>
     <string name="sort_order_ascending">Ascending</string>
     <string name="sort_order_descending">Descending</string>
+    <string name="movies_list_empty_filtered">No movies match this genre this week.</string>
+    <string name="movies_list_empty_generic">No trending movies right now.</string>
+    <string name="action_show_all">Show All</string>
 
     <string name="cd_navigate_back">Navigate back</string>
     <string name="movie_detail_overview_title">Overview</string>

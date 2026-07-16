@@ -1,6 +1,7 @@
 plugins {
     id("amro.android.library")
     id("amro.android.compose")
+    alias(libs.plugins.kover)
 }
 
 android {

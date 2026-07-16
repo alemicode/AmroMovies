@@ -1,6 +1,7 @@
 plugins {
     id("amro.android.library")
     id("amro.koin")
+    alias(libs.plugins.kover)
 }
 
 android {

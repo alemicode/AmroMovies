@@ -1,6 +1,5 @@
 package com.alemicode.amromovies.feature.movies.data
 
-import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
@@ -16,6 +15,10 @@ import com.alemicode.amromovies.feature.movies.data.remote.dto.GenreListResponse
 import com.alemicode.amromovies.feature.movies.data.remote.dto.MovieDetailDto
 import com.alemicode.amromovies.feature.movies.data.remote.dto.MovieResultDto
 import com.alemicode.amromovies.feature.movies.data.remote.dto.TrendingMoviesResponseDto
+import com.alemicode.amromovies.feature.movies.domain.model.Movie
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -49,12 +52,10 @@ class MoviesRepositoryImplTest {
         val result = repository.refreshTrendingMovies()
 
         assertThat(result).isEqualTo(Result.Success(Unit))
-        repository.observeTrendingMovies().test {
-            val movies = awaitItem()
-            assertThat(movies).hasSize(2)
-            assertThat(movies.first { it.id == 1 }.genres.map { it.name }).isEqualTo(listOf("Action"))
-            assertThat(movies.first { it.id == 2 }.genres.map { it.name }).isEqualTo(listOf("Comedy"))
-        }
+        val movies = observeCurrentTrendingMovies()
+        assertThat(movies).hasSize(2)
+        assertThat(movies.first { it.id == 1 }.genres.map { it.name }).isEqualTo(listOf("Action"))
+        assertThat(movies.first { it.id == 2 }.genres.map { it.name }).isEqualTo(listOf("Comedy"))
     }
 
     @Test
@@ -65,9 +66,7 @@ class MoviesRepositoryImplTest {
         val result = repository.refreshTrendingMovies()
 
         assertThat(result).isInstanceOf<Result.Error<DataError>>()
-        repository.observeTrendingMovies().test {
-            assertThat(awaitItem()).isEmpty()
-        }
+        assertThat(observeCurrentTrendingMovies()).isEmpty()
     }
 
     @Test
@@ -82,9 +81,7 @@ class MoviesRepositoryImplTest {
         val result = repository.refreshTrendingMovies()
 
         assertThat(result).isInstanceOf<Result.Error<DataError>>()
-        repository.observeTrendingMovies().test {
-            assertThat(awaitItem()).isEmpty()
-        }
+        assertThat(observeCurrentTrendingMovies()).isEmpty()
     }
 
     @Test
@@ -121,6 +118,14 @@ class MoviesRepositoryImplTest {
         val result = repository.getMovieDetail(999)
 
         assertThat(result).isInstanceOf<Result.Error<DataError>>()
+    }
+
+    private fun TestScope.observeCurrentTrendingMovies(): List<Movie> {
+        var movies: List<Movie>? = null
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repository.observeTrendingMovies().collect { movies = it }
+        }
+        return movies ?: error("observeTrendingMovies() never emitted")
     }
 
     private fun fivePagesOf(vararg pages: Pair<Int, List<MovieResultDto>>): Map<Int, TrendingMoviesResponseDto> {

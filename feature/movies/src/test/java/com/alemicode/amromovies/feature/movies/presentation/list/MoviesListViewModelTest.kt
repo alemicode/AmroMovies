@@ -93,6 +93,21 @@ class MoviesListViewModelTest {
     }
 
     @Test
+    fun `OnGenreSelected with a genre matching nothing yields an empty, non-error result`() = runTest {
+        repository.emit(listOf(testMovie(id = 1, genres = listOf(Genre(1, "Action")))))
+        val viewModel = createViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.state.collect {}
+        }
+
+        viewModel.onAction(MoviesListAction.OnGenreSelected(genreId = 999))
+
+        assertThat(viewModel.state.value.movies).isEmpty()
+        assertThat(viewModel.state.value.hasError).isFalse()
+        assertThat(viewModel.state.value.isLoading).isFalse()
+    }
+
+    @Test
     fun `OnGenreSelected with null resets the filter back to all movies`() = runTest {
         val action = Genre(1, "Action")
         repository.emit(listOf(testMovie(id = 1, genres = listOf(action)), testMovie(id = 2)))

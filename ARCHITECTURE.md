@@ -87,10 +87,15 @@ whoever is *building* the thing.
    - Movie detail: same pattern per id - fetch, write, read, display - triggered on screen open.
    - Filtering/sorting run **in-memory** over the ~100 cached items (`derivedStateOf` / pure
      functions) - no DB queries needed. Matches the brief's "filter what's shown, don't backfill."
-7. **Testing: JUnit5 + MockK + Turbine + AssertK.** `core:testing` exposes these as `api` deps
-   plus feature-agnostic rules (`MainDispatcherRule`, planned). It does **not** hold
-   feature-specific fakes (e.g. a `FakeMoviesRepository`) - those live inside the feature
-   module's own test sources, since `core:testing` can't depend back on a feature module.
+7. **Testing: JUnit5 + MockK + AssertK.** `core:testing` exposes these as `api` deps plus
+   feature-agnostic rules (`MainDispatcherExtension`, a JUnit5 `BeforeEach`/`AfterEach` hook that
+   sets `Dispatchers.Main` for ViewModel-scoped coroutines). It does **not** hold feature-specific
+   fakes (e.g. a `FakeMoviesRepository`) - those live inside the feature module's own test
+   sources, since `core:testing` can't depend back on a feature module. Flow-based state (e.g. a
+   ViewModel's lazily-shared `stateIn(WhileSubscribed)`) is tested with a `backgroundScope`
+   collector on an `UnconfinedTestDispatcher`, asserting on `.value` - see
+   [Android's testing guidance](https://developer.android.com/kotlin/flow/test) - rather than a
+   separate Flow-testing library.
 8. **Build tooling: version catalog + `build-logic` convention plugins**, so a new feature
    module's `build.gradle.kts` is ~10 lines. See "Convention plugins" below.
 9. **TMDB auth: v4 Read Access Token (Bearer) only**, not the v3 `api_key` query param. Stored in
@@ -103,9 +108,9 @@ whoever is *building* the thing.
 ```
 app                 composition root: MainActivity, NavHost, Koin startup
 design-system        theme, colors, typography, spacing, shapes, reusable Compose components
-core:common          Result<D,E>/DataError, UiText, DispatcherProvider - infra, no business logic
+core:common          Result<D,E>/DataError, DispatcherProvider - infra, no business logic
 core:network         OkHttp/Retrofit/kotlinx.serialization setup, TMDB auth interceptor, safeApiCall
-core:testing         MockK/Turbine/AssertK/JUnit5 exposed as `api`, shared feature-agnostic test rules
+core:testing         MockK/AssertK/JUnit5 exposed as `api`, shared feature-agnostic test rules
 feature:movies       self-contained: TMDB DTOs, Room entities/DAO, repository, use cases,
                      ViewModels, Compose screens, nav graph - everything movies-specific
 ```
@@ -141,6 +146,6 @@ android {
 MVP complete: trending list (genre filter, sort by popularity/title/release date, both
 directions), movie detail screen with all requested fields, offline-first Room caching, error/
 retry states, light/dark theme with a runtime toggle, and navigation between the two screens.
-Tested with JUnit5/MockK/Turbine/AssertK unit tests, Paparazzi snapshot tests, and instrumented
+Tested with JUnit5/MockK/AssertK unit tests, Paparazzi snapshot tests, and instrumented
 Compose UI tests. See `README.md` for the full rundown aimed at a reviewer; this file stays as
 the build-log-style companion for anyone extending the codebase.

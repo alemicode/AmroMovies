@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     id("amro.android.library")
     id("amro.koin")
+    alias(libs.plugins.kover)
 }
 
 val tmdbReadAccessToken: String = Properties().run {

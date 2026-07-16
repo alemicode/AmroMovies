@@ -5,6 +5,7 @@ kotlin = "2.2.10"
 ksp = "2.2.10-2.0.2"
 detekt = "1.23.8"
 paparazzi = "2.0.0-alpha05"
+kover = "0.9.8"
 
 # AndroidX
 coreKtx = "1.19.0"
@@ -36,7 +37,6 @@ espressoCore = "3.7.0"
 junitJupiter = "6.1.2"
 junitPlatformLauncher = "6.1.2"
 mockk = "1.14.11"
-turbine = "1.2.1"
 assertk = "0.28.1"
 
 [libraries]
@@ -98,7 +98,6 @@ junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-para
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatformLauncher" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 assertk = { group = "com.willowtreeapps.assertk", name = "assertk", version.ref = "assertk" }
 
 # Testing - instrumented / androidTest (JUnit4 runner required by AGP test orchestrator)
@@ -119,3 +118,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

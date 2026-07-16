@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alemicode.amromovies.designsystem.components.AmroButton
 import com.alemicode.amromovies.designsystem.components.AmroThemeToggleButton
@@ -156,20 +157,58 @@ private fun MoviesListContent(
             ),
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                horizontal = MaterialTheme.space.space16,
-                vertical = MaterialTheme.space.space16,
-            ),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.space.space16),
+        if (state.movies.isEmpty()) {
+            EmptyListContent(
+                hasGenreFilter = state.selectedGenreId != null,
+                onShowAllClick = { onAction(MoviesListAction.OnGenreSelected(null)) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    horizontal = MaterialTheme.space.space16,
+                    vertical = MaterialTheme.space.space16,
+                ),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.space.space16),
+            ) {
+                items(state.movies, key = { it.id }) { movie ->
+                    MovieListItem(
+                        movie = movie,
+                        onClick = { onAction(MoviesListAction.OnMovieClick(movie.id)) },
+                        modifier = Modifier.animateItem(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyListContent(
+    hasGenreFilter: Boolean,
+    onShowAllClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.padding(MaterialTheme.space.space32), contentAlignment = Alignment.Center) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.space.space16, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            items(state.movies, key = { it.id }) { movie ->
-                MovieListItem(
-                    movie = movie,
-                    onClick = { onAction(MoviesListAction.OnMovieClick(movie.id)) },
-                    modifier = Modifier.animateItem(),
-                )
+            Text(
+                text = stringResource(
+                    if (hasGenreFilter) {
+                        R.string.movies_list_empty_filtered
+                    } else {
+                        R.string.movies_list_empty_generic
+                    },
+                ),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+            )
+            if (hasGenreFilter) {
+                AmroButton(label = stringResource(R.string.action_show_all), onClick = onShowAllClick)
             }
         }
     }
@@ -227,6 +266,41 @@ private fun MoviesListScreenErrorPreview() {
     AmroTheme {
         MoviesListScreen(
             state = MoviesListState(isLoading = false, hasError = true),
+            onAction = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun MoviesListScreenEmptyFilteredPreview() {
+    AmroTheme {
+        MoviesListScreen(
+            state = MoviesListState(
+                movies = emptyList(),
+                genreFilters = listOf(
+                    GenreFilterUi(id = null, label = "All", selected = false),
+                    GenreFilterUi(id = 99, label = "Documentary", selected = true),
+                ),
+                selectedGenreId = 99,
+                isLoading = false,
+                hasError = false,
+            ),
+            onAction = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun MoviesListScreenEmptyGenericPreview() {
+    AmroTheme {
+        MoviesListScreen(
+            state = MoviesListState(
+                movies = emptyList(),
+                isLoading = false,
+                hasError = false,
+            ),
             onAction = {},
         )
     }

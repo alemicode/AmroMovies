@@ -3,6 +3,7 @@ plugins {
     id("amro.room")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.paparazzi)
+    alias(libs.plugins.kover)
 }
 
 android {
