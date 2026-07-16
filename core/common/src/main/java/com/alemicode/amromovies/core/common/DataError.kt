@@ -1,6 +1,5 @@
 package com.alemicode.amromovies.core.common
 
-/** Errors originating from the data layer - a network call or local (Room) access. */
 sealed interface DataError : Error {
     enum class Network : DataError {
         BAD_REQUEST,

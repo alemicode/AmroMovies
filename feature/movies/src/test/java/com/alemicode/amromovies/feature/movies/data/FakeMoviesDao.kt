@@ -7,7 +7,6 @@ import com.alemicode.amromovies.feature.movies.data.local.entity.MovieEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/** In-memory fake of the Room DAO - `replaceTrendingMovies` uses the interface's real default body. */
 internal class FakeMoviesDao : MoviesDao {
 
     private val moviesFlow = MutableStateFlow<List<MovieEntity>>(emptyList())

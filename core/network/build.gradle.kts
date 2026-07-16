@@ -5,8 +5,6 @@ plugins {
     id("amro.koin")
 }
 
-// TMDB requires a v4 Read Access Token (Bearer auth) at runtime. It's a secret, so it's read
-// from the gitignored local.properties rather than hardcoded - see local.properties.sample.
 val tmdbReadAccessToken: String = Properties().run {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {

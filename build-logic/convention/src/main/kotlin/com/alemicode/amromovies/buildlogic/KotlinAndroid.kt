@@ -10,10 +10,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 private const val COMPILE_SDK = 37
 private const val MIN_SDK = 24
 
-/**
- * Baseline SDK/Java/Kotlin config shared by every Android library module.
- * Single source of truth so bumping compile/min SDK is a one-line change here, not N edits.
- */
 internal fun Project.configureKotlinAndroid(
     libraryExtension: LibraryExtension,
 ) {

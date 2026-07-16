@@ -105,7 +105,7 @@ class MoviesRepositoryImplTest {
     @Test
     fun `getMovieDetail falls back to the cache when the network call fails`() = runTest {
         fakeApi.movieDetailResponses = mapOf(1 to movieDetail(id = 1, title = "Cached"))
-        repository.getMovieDetail(1) // seed the cache with a successful fetch first
+        repository.getMovieDetail(1)
         fakeApi.movieDetailError = IOException("no internet")
 
         val result = repository.getMovieDetail(1)

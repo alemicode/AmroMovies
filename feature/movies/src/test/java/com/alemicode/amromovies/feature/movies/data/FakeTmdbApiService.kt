@@ -5,13 +5,10 @@ import com.alemicode.amromovies.feature.movies.data.remote.dto.GenreListResponse
 import com.alemicode.amromovies.feature.movies.data.remote.dto.MovieDetailDto
 import com.alemicode.amromovies.feature.movies.data.remote.dto.TrendingMoviesResponseDto
 
-/** Throws whatever's configured, letting `safeApiCall` (already tested) map it - no need to
- *  re-verify exception -> DataError mapping here, just that the repository handles the outcome. */
 internal class FakeTmdbApiService : TmdbApiService {
 
     var trendingPages: Map<Int, TrendingMoviesResponseDto> = emptyMap()
 
-    /** Only this specific page throws, so tests can simulate "one of five pages failed". */
     var trendingErrorPage: Int? = null
     var trendingError: Throwable = RuntimeException("trending page fetch failed")
 

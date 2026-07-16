@@ -13,8 +13,6 @@ ksp {
 }
 
 dependencies {
-    // Generic networking infra only (OkHttpClient, Retrofit instance, auth interceptor,
-    // safeApiCall). The TMDB-specific API interface and DTOs are owned by this module.
     implementation(project(":core:network"))
 
     implementation(libs.retrofit.core)
