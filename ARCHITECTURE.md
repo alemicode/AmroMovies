@@ -138,8 +138,9 @@ android {
 
 ## Status
 
-Phase 0 (foundations) complete. `core:common` has `Result`/`DataError`/`UiState`/
-`DispatcherProvider`. `core:network` has the OkHttp/Retrofit setup, auth interceptor, and
-`safeApiCall`. Nothing inside `feature:movies` has been written yet - no DTOs, entities,
-repository, use cases, ViewModels, or screens. `design-system` has no theme/components yet
-either. Next up: `feature:movies`'s domain layer.
+MVP complete: trending list (genre filter, sort by popularity/title/release date, both
+directions), movie detail screen with all requested fields, offline-first Room caching, error/
+retry states, light/dark theme with a runtime toggle, and navigation between the two screens.
+Tested with JUnit5/MockK/Turbine/AssertK unit tests, Paparazzi snapshot tests, and instrumented
+Compose UI tests. See `README.md` for the full rundown aimed at a reviewer; this file stays as
+the build-log-style companion for anyone extending the codebase.
