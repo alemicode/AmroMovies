@@ -39,7 +39,9 @@ dependencies {
     implementation(project(":design-system"))
     implementation(project(":core:common"))
     implementation(project(":core:network"))
-    implementation(project(":feature:movies"))
+    implementation(project(":feature:movies:data"))
+    implementation(project(":feature:movies:domain"))
+    implementation(project(":feature:movies:presentation"))
 
     implementation(libs.koin.android)
     implementation(libs.androidx.navigation.compose)

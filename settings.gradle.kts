@@ -33,4 +33,6 @@ include(":core:common")
 include(":core:network")
 include(":core:testing")
 
-include(":feature:movies")
+include(":feature:movies:data")
+include(":feature:movies:domain")
+include(":feature:movies:presentation")

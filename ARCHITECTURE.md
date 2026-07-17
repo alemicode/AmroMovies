@@ -51,17 +51,24 @@ whoever is *building* the thing.
 ## Architecture decisions
 
 1. **Each feature owns its full vertical slice (data + domain + presentation).** No centralized
-   `core:domain` / `core:data`. Modeled directly on `alemicode/Panjere`'s `feature/profile`
-   module, which has its own `datasource/`, `usecase/`, `model/`, `ui/`, `viewmodel/` - all
-   inside one Gradle module, nothing shared. A centralized domain/data module would become a
-   bottleneck every future feature team has to touch, which directly contradicts AMRO's
+   `core:domain` / `core:data` *shared across features*. Modeled directly on `alemicode/Panjere`'s
+   `feature/profile` module, which has its own `datasource/`, `usecase/`, `model/`, `ui/`,
+   `viewmodel/` - nothing shared with other features. A centralized domain/data module would
+   become a bottleneck every future feature team has to touch, which directly contradicts AMRO's
    "independent feature teams" requirement. See git history for the full reasoning (this was a
    correction after the first pass centralized things - don't repeat that mistake for new
    features).
+   - Within a feature, `data`/`domain`/`presentation` are separate Gradle modules
+     (`feature:movies:data`, `feature:movies:domain`, `feature:movies:presentation`), not just
+     packages inside one module. This makes the dependency rule enforceable by the build graph
+     instead of convention: `presentation` and `data` both depend on `domain`, `presentation`
+     never depends on `data` directly (they're only wired together via DI in `:app`), and Gradle
+     itself fails the build if that's violated. Still a single feature's slice - no sharing with
+     other features.
    - Consequence: there's also no shared `core:database`. Room's `@Database`-annotated class must
      reference its entity classes directly, so a shared DB module would need a dependency *back*
      on the feature module that owns those entities - backwards. Each feature owns its own Room
-     database instance.
+     database instance (in its `data` module).
    - **Rule of thumb for new modules**: don't extract a shared module preemptively. If a *second*
      feature genuinely needs something a feature currently owns (e.g. the `Movie` model), that's
      the trigger to extract it - not before (YAGNI, and matches Panjere's own `common:*` tier,
@@ -71,12 +78,12 @@ whoever is *building* the thing.
    interview.
 3. **Networking: Retrofit + OkHttp + kotlinx.serialization.** No Gson/Moshi reflection.
    `core:network` provides only generic infra (OkHttpClient, Retrofit instance, TMDB auth
-   interceptor, `safeApiCall`). The TMDB API interface and DTOs are owned by `feature:movies`, not
-   `core:network` - `core:network` doesn't know TMDB exists, so a second feature hitting a
-   different API doesn't touch it.
+   interceptor, `safeApiCall`). The TMDB API interface and DTOs are owned by
+   `feature:movies:data`, not `core:network` - `core:network` doesn't know TMDB exists, so a
+   second feature hitting a different API doesn't touch it.
 4. **Images: Coil 3** (Compose-first, `AsyncImage`).
 5. **Navigation: Compose Navigation, type-safe routes** (`@Serializable` route objects).
-   `feature:movies` exposes its own graph builder; `app`'s `NavHost` includes it.
+   `feature:movies:presentation` exposes its own graph builder; `app`'s `NavHost` includes it.
 6. **Caching (offline-first, single source of truth), refresh is action-driven, not time-driven:**
    request -> write to Room -> read from Room -> display, always through that same path so the UI
    never renders anything the cache didn't see first.
@@ -106,18 +113,21 @@ whoever is *building* the thing.
 ## Module map
 
 ```
-app                 composition root: MainActivity, NavHost, Koin startup
-design-system        theme, colors, typography, spacing, shapes, reusable Compose components
-core:common          Result<D,E>/DataError, DispatcherProvider - infra, no business logic
-core:network         OkHttp/Retrofit/kotlinx.serialization setup, TMDB auth interceptor, safeApiCall
-core:testing         MockK/AssertK/JUnit5 exposed as `api`, shared feature-agnostic test rules
-feature:movies       self-contained: TMDB DTOs, Room entities/DAO, repository, use cases,
-                     ViewModels, Compose screens, nav graph - everything movies-specific
+app                        composition root: MainActivity, NavHost, Koin startup
+design-system              theme, colors, typography, spacing, shapes, reusable Compose components
+core:common                Result<D,E>/DataError, DispatcherProvider - infra, no business logic
+core:network               OkHttp/Retrofit/kotlinx.serialization setup, TMDB auth interceptor, safeApiCall
+core:testing               MockK/AssertK/JUnit5 exposed as `api`, shared feature-agnostic test rules
+feature:movies:domain      models, repository interface, use cases - no Android/Room/Retrofit deps
+feature:movies:data        TMDB DTOs, Room entities/DAO, repository impl - implements domain's repository
+feature:movies:presentation ViewModels, Compose screens, nav graph - depends on domain only
 ```
 
 Dependency direction: `feature:*` depends on `core:*` and `design-system`, never the reverse.
 `core:*` modules never depend on each other's business logic and never on `feature:*`. Two
-features never depend on each other directly.
+features never depend on each other directly. Within `feature:movies`, `data` and `presentation`
+both depend on `domain`; `presentation` never depends on `data` - they're wired together only via
+Koin DI modules assembled in `:app`.
 
 ## Convention plugins (`build-logic/convention`)
 
@@ -125,19 +135,27 @@ features never depend on each other directly.
 |---|---|---|
 | `amro.android.library` | Android Library plugin, shared compileSdk/minSdk/Java config, JUnit5 runner, common test deps | every `core:*`, transitively every `feature:*` |
 | `amro.android.compose` | Compose compiler plugin, BOM, UI/tooling deps | `design-system`, transitively every `feature:*` |
-| `amro.android.feature` | library + compose + koin, plus design-system/core:common/navigation/koin-compose deps | every `feature:*` |
+| `amro.android.feature` | library + compose + koin, plus design-system/core:common/navigation/koin-compose deps | every `feature:*:presentation` |
 | `amro.koin` | Koin BOM + core + test artifacts | anything declaring DI bindings |
-| `amro.room` | KSP + Room runtime/ktx/compiler | anything with a local Room DB (currently `feature:movies`) |
+| `amro.room` | KSP + Room runtime/ktx/compiler | anything with a local Room DB (currently `feature:movies:data`) |
 
-A new feature module's `build.gradle.kts` should look like:
+`amro.android.feature` pulls in Compose/navigation/design-system, so it's meant for a feature's
+`presentation` module specifically - not `data` or `domain`, which use `amro.android.library`
+directly (plus `amro.room`/`amro.koin` as needed) since they have no UI concerns.
+
+A new feature's presentation module `build.gradle.kts` should look like:
 ```kotlin
 plugins {
     id("amro.android.feature")
-    // + id("amro.room") / kotlin.serialization / whatever that specific feature needs
+    // + kotlin.serialization / whatever that specific feature needs
 }
 
 android {
-    namespace = "com.alemicode.amromovies.feature.xxx"
+    namespace = "com.alemicode.amromovies.feature.xxx.presentation"
+}
+
+dependencies {
+    implementation(project(":feature:xxx:domain"))
 }
 ```
 

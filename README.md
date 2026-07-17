@@ -58,7 +58,9 @@ caching strategy, why Koin over Hilt, why Retrofit + kotlinx.serialization, and 
 | `core:common` | `Result<D, E>` / `DataError`, `DispatcherProvider` — infra only, no business logic |
 | `core:network` | OkHttp/Retrofit/kotlinx.serialization setup, TMDB auth interceptor, `safeApiCall` |
 | `core:testing` | MockK/AssertK/JUnit5 exposed as `api`, plus shared feature-agnostic test rules |
-| `feature:movies` | Self-contained: TMDB DTOs, Room entities/DAO, repository, use cases, ViewModels, Compose screens, nav graph — everything movies-specific |
+| `feature:movies:domain` | Models, repository interface, use cases — no Android/Room/Retrofit deps |
+| `feature:movies:data` | TMDB DTOs, Room entities/DAO, repository implementation |
+| `feature:movies:presentation` | ViewModels, Compose screens, nav graph |
 
 **Dependency rules:**
 
@@ -66,8 +68,11 @@ caching strategy, why Koin over Hilt, why Retrofit + kotlinx.serialization, and 
 - `core:*` modules never depend on each other's business logic, or on `feature:*`.
 - Two features never depend on each other directly — cross-feature navigation is always a lambda
   callback assembled in `:app`.
+- Within a feature, `data` and `presentation` both depend on `domain`; `presentation` never
+  depends on `data` directly — they're wired together only via Koin DI modules assembled in
+  `:app`.
 
-**Presentation pattern (MVI)**, applied consistently across `feature:movies`:
+**Presentation pattern (MVI)**, applied consistently across `feature:movies:presentation`:
 
 - A single `StateFlow<State>` per screen — no independent `MutableStateFlow`s combined together.
 - A sealed `Action` interface capturing user intent.
@@ -106,14 +111,14 @@ Full version numbers live in [`gradle/libs.versions.toml`](./gradle/libs.version
 
 ```bash
 ./gradlew test                                    # unit tests
-./gradlew :feature:movies:verifyPaparazziDebug     # screenshot tests
+./gradlew :feature:movies:presentation:verifyPaparazziDebug   # screenshot tests
 ./gradlew connectedDebugAndroidTest                # instrumented UI tests (needs a device/emulator)
 ```
 
 ### Coverage
 
 Measured with [Kover](https://github.com/Kotlin/kotlinx-kover), merged across `app`,
-`design-system`, `core:common`, `core:network`, and `feature:movies`:
+`design-system`, `core:common`, `core:network`, and `feature:movies:{domain,data,presentation}`:
 
 | Metric | Coverage |
 |---|---|

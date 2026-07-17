@@ -14,7 +14,9 @@ dependencies {
     kover(project(":design-system"))
     kover(project(":core:common"))
     kover(project(":core:network"))
-    kover(project(":feature:movies"))
+    kover(project(":feature:movies:data"))
+    kover(project(":feature:movies:domain"))
+    kover(project(":feature:movies:presentation"))
 }
 
 kover {
