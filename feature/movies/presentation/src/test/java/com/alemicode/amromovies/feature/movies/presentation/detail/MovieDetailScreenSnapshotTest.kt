@@ -1,35 +1,21 @@
 package com.alemicode.amromovies.feature.movies.presentation.detail
 
-import app.cash.paparazzi.DeviceConfig
-import app.cash.paparazzi.Paparazzi
-import app.cash.paparazzi.TestName
+import com.alemicode.amromovies.core.testing.paparazzi.BasePaparazziMatrixTest
+import com.alemicode.amromovies.core.testing.paparazzi.PaparazziDeviceSize
+import com.alemicode.amromovies.core.testing.paparazzi.PaparazziFontScale
+import com.alemicode.amromovies.core.testing.paparazzi.PaparazziLocaleConfig
 import com.alemicode.amromovies.designsystem.theme.AmroTheme
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInfo
+import com.google.testing.junit.testparameterinjector.TestParameter
+import com.google.testing.junit.testparameterinjector.TestParameterInjector
+import org.junit.Test
+import org.junit.runner.RunWith
 
-class MovieDetailScreenSnapshotTest {
-
-    private lateinit var paparazzi: Paparazzi
-
-    @BeforeEach
-    fun setUp(testInfo: TestInfo) {
-        paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_9).apply {
-            setup(
-                testName = TestName(
-                    packageName = testInfo.testClass.get().`package`?.name.orEmpty(),
-                    className = testInfo.testClass.get().simpleName,
-                    methodName = testInfo.testMethod.get().name,
-                ),
-            )
-        }
-    }
-
-    @AfterEach
-    fun tearDown() {
-        paparazzi.teardown()
-    }
+@RunWith(TestParameterInjector::class)
+class MovieDetailScreenSnapshotTest(
+    @TestParameter deviceSize: PaparazziDeviceSize,
+    @TestParameter locale: PaparazziLocaleConfig,
+    @TestParameter fontScale: PaparazziFontScale,
+) : BasePaparazziMatrixTest(deviceSize, locale, fontScale) {
 
     private val sampleMovie = MovieDetailUi(
         id = 1,

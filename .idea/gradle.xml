@@ -28,6 +28,8 @@
             <option value="$PROJECT_DIR$/core/common" />
             <option value="$PROJECT_DIR$/core/network" />
             <option value="$PROJECT_DIR$/core/testing" />
+            <option value="$PROJECT_DIR$/core/testing/coroutines" />
+            <option value="$PROJECT_DIR$/core/testing/paparazzi" />
             <option value="$PROJECT_DIR$/design-system" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/movies" />

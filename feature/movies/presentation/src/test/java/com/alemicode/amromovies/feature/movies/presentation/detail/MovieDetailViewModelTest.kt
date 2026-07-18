@@ -7,7 +7,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import com.alemicode.amromovies.core.common.DataError
 import com.alemicode.amromovies.core.common.Result
-import com.alemicode.amromovies.core.testing.MainDispatcherExtension
+import com.alemicode.amromovies.core.testing.coroutines.MainDispatcherExtension
 import com.alemicode.amromovies.feature.movies.domain.usecase.GetMovieDetailUseCase
 import com.alemicode.amromovies.feature.movies.presentation.FakeMoviesRepository
 import com.alemicode.amromovies.feature.movies.presentation.testMovieDetail

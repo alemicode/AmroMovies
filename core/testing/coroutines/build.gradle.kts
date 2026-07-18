@@ -3,11 +3,10 @@ plugins {
 }
 
 android {
-    namespace = "com.alemicode.amromovies.core.testing"
+    namespace = "com.alemicode.amromovies.core.testing.coroutines"
 }
 
 dependencies {
     api(libs.junit.jupiter.api)
-    api(libs.mockk)
-    api(libs.assertk)
+    api(libs.kotlinx.coroutines.test)
 }

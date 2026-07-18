@@ -8,7 +8,7 @@ import assertk.assertions.isNotEmpty
 import assertk.assertions.isTrue
 import com.alemicode.amromovies.core.common.DataError
 import com.alemicode.amromovies.core.common.Result
-import com.alemicode.amromovies.core.testing.MainDispatcherExtension
+import com.alemicode.amromovies.core.testing.coroutines.MainDispatcherExtension
 import com.alemicode.amromovies.feature.movies.domain.model.Genre
 import com.alemicode.amromovies.feature.movies.domain.model.SortField
 import com.alemicode.amromovies.feature.movies.domain.model.SortOrder

@@ -32,6 +32,8 @@ include(":design-system")
 include(":core:common")
 include(":core:network")
 include(":core:testing")
+include(":core:testing:coroutines")
+include(":core:testing:paparazzi")
 
 include(":feature:movies:data")
 include(":feature:movies:domain")

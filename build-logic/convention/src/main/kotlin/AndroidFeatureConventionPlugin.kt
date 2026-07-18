@@ -23,6 +23,8 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("koin-androidx-compose").get())
 
                 add("testImplementation", project(":core:testing"))
+                add("testImplementation", project(":core:testing:coroutines"))
+                add("testImplementation", project(":core:testing:paparazzi"))
             }
         }
     }

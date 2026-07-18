@@ -1,4 +1,4 @@
-package com.alemicode.amromovies.core.testing
+package com.alemicode.amromovies.core.testing.coroutines
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
