@@ -8,7 +8,7 @@ import assertk.assertions.isNotEmpty
 import assertk.assertions.isTrue
 import com.alemicode.amromovies.core.common.DataError
 import com.alemicode.amromovies.core.common.Result
-import com.alemicode.amromovies.core.testing.coroutines.MainDispatcherExtension
+import com.alemicode.amromovies.core.testing.coroutines.MainDispatcherRule
 import com.alemicode.amromovies.feature.movies.domain.model.Genre
 import com.alemicode.amromovies.feature.movies.domain.model.SortField
 import com.alemicode.amromovies.feature.movies.domain.model.SortOrder
@@ -20,12 +20,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Rule
+import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@ExtendWith(MainDispatcherExtension::class)
 class MoviesListViewModelTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = FakeMoviesRepository()
 

@@ -10,7 +10,7 @@ import com.alemicode.amromovies.feature.movies.domain.repository.MoviesRepositor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 private class FakeMoviesRepository(private val refreshResult: Result<Unit, DataError>) : MoviesRepository {
     var refreshCallCount = 0

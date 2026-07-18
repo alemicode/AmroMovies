@@ -20,8 +20,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import java.io.IOException
 
 private val ACTION = GenreDto(id = 28, name = "Action")
@@ -33,7 +33,7 @@ class MoviesRepositoryImplTest {
     private val fakeApi = FakeTmdbApiService()
     private lateinit var repository: MoviesRepositoryImpl
 
-    @BeforeEach
+    @Before
     fun setUp() {
         repository = MoviesRepositoryImpl(
             remoteDataSource = RemoteMoviesDataSource(fakeApi),

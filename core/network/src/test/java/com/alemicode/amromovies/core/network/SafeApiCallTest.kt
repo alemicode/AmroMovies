@@ -8,7 +8,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException

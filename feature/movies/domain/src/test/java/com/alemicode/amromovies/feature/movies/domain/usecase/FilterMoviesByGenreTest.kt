@@ -5,7 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import com.alemicode.amromovies.feature.movies.domain.model.Genre
 import com.alemicode.amromovies.feature.movies.domain.model.Movie
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 private val ACTION = Genre(id = 28, name = "Action")
 private val COMEDY = Genre(id = 35, name = "Comedy")

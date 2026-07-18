@@ -8,7 +8,7 @@ import com.alemicode.amromovies.feature.movies.domain.model.Movie
 import com.alemicode.amromovies.feature.movies.domain.model.SortField
 import com.alemicode.amromovies.feature.movies.domain.model.SortOrder
 import kotlinx.datetime.LocalDate
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class SortMoviesTest {
 

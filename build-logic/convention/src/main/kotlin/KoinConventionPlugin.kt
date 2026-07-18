@@ -13,7 +13,6 @@ class KoinConventionPlugin : Plugin<Project> {
 
                 add("testImplementation", platform(bom))
                 add("testImplementation", libs.findLibrary("koin-test").get())
-                add("testImplementation", libs.findLibrary("koin-test-junit5").get())
             }
         }
     }

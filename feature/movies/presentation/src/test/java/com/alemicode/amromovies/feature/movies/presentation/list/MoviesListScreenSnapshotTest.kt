@@ -2,36 +2,16 @@ package com.alemicode.amromovies.feature.movies.presentation.list
 
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
-import app.cash.paparazzi.TestName
 import com.alemicode.amromovies.designsystem.theme.AmroTheme
 import com.alemicode.amromovies.feature.movies.domain.model.SortField
 import com.alemicode.amromovies.feature.movies.domain.model.SortOrder
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInfo
+import org.junit.Rule
+import org.junit.Test
 
 class MoviesListScreenSnapshotTest {
 
-    private lateinit var paparazzi: Paparazzi
-
-    @BeforeEach
-    fun setUp(testInfo: TestInfo) {
-        paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_9).apply {
-            setup(
-                testName = TestName(
-                    packageName = testInfo.testClass.get().`package`?.name.orEmpty(),
-                    className = testInfo.testClass.get().simpleName,
-                    methodName = testInfo.testMethod.get().name,
-                ),
-            )
-        }
-    }
-
-    @AfterEach
-    fun tearDown() {
-        paparazzi.teardown()
-    }
+    @get:Rule
+    val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_9)
 
     private val sampleMovies = listOf(
         MovieUi(

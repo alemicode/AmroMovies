@@ -7,7 +7,7 @@ import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import com.alemicode.amromovies.core.common.DataError
 import com.alemicode.amromovies.core.common.Result
-import com.alemicode.amromovies.core.testing.coroutines.MainDispatcherExtension
+import com.alemicode.amromovies.core.testing.coroutines.MainDispatcherRule
 import com.alemicode.amromovies.feature.movies.domain.usecase.GetMovieDetailUseCase
 import com.alemicode.amromovies.feature.movies.presentation.FakeMoviesRepository
 import com.alemicode.amromovies.feature.movies.presentation.testMovieDetail
@@ -15,12 +15,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Rule
+import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@ExtendWith(MainDispatcherExtension::class)
 class MovieDetailViewModelTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = FakeMoviesRepository()
 

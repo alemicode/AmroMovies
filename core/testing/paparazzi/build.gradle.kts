@@ -8,7 +8,6 @@ android {
 
 dependencies {
     api(libs.junit)
-    api(libs.junit.vintage.engine)
     api(libs.paparazzi)
     api(libs.test.parameter.injector)
 }

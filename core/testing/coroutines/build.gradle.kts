@@ -7,6 +7,6 @@ android {
 }
 
 dependencies {
-    api(libs.junit.jupiter.api)
+    api(libs.junit)
     api(libs.kotlinx.coroutines.test)
 }
