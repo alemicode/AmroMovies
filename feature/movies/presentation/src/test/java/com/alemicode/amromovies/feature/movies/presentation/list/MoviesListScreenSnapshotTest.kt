@@ -1,17 +1,23 @@
 package com.alemicode.amromovies.feature.movies.presentation.list
 
-import app.cash.paparazzi.DeviceConfig
-import app.cash.paparazzi.Paparazzi
+import com.alemicode.amromovies.core.testing.paparazzi.BasePaparazziMatrixTest
+import com.alemicode.amromovies.core.testing.paparazzi.PaparazziDeviceSize
+import com.alemicode.amromovies.core.testing.paparazzi.PaparazziFontScale
+import com.alemicode.amromovies.core.testing.paparazzi.PaparazziLocaleConfig
 import com.alemicode.amromovies.designsystem.theme.AmroTheme
 import com.alemicode.amromovies.feature.movies.domain.model.SortField
 import com.alemicode.amromovies.feature.movies.domain.model.SortOrder
-import org.junit.Rule
+import com.google.testing.junit.testparameterinjector.TestParameter
+import com.google.testing.junit.testparameterinjector.TestParameterInjector
 import org.junit.Test
+import org.junit.runner.RunWith
 
-class MoviesListScreenSnapshotTest {
-
-    @get:Rule
-    val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_9)
+@RunWith(TestParameterInjector::class)
+class MoviesListScreenSnapshotTest(
+    @TestParameter deviceSize: PaparazziDeviceSize,
+    @TestParameter locale: PaparazziLocaleConfig,
+    @TestParameter fontScale: PaparazziFontScale,
+) : BasePaparazziMatrixTest(deviceSize, locale, fontScale) {
 
     private val sampleMovies = listOf(
         MovieUi(
