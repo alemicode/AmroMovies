@@ -1,5 +1,7 @@
 package com.alemicode.amromovies.feature.movies.presentation.list
 
+import com.alemicode.amromovies.core.common.DataError
+import com.alemicode.amromovies.core.common.UiState
 import com.alemicode.amromovies.core.testing.paparazzi.BasePaparazziMatrixTest
 import com.alemicode.amromovies.core.testing.paparazzi.PaparazziDeviceSize
 import com.alemicode.amromovies.core.testing.paparazzi.PaparazziFontScale
@@ -48,12 +50,10 @@ class MoviesListScreenSnapshotTest(
             AmroTheme(darkTheme = false) {
                 MoviesListScreen(
                     state = MoviesListState(
-                        movies = sampleMovies,
+                        content = UiState.Success(sampleMovies),
                         genreFilters = sampleGenreFilters,
                         sortField = SortField.POPULARITY,
                         sortOrder = SortOrder.DESCENDING,
-                        isLoading = false,
-                        hasError = false,
                     ),
                     onAction = {},
                 )
@@ -67,12 +67,10 @@ class MoviesListScreenSnapshotTest(
             AmroTheme(darkTheme = true) {
                 MoviesListScreen(
                     state = MoviesListState(
-                        movies = sampleMovies,
+                        content = UiState.Success(sampleMovies),
                         genreFilters = sampleGenreFilters,
                         sortField = SortField.POPULARITY,
                         sortOrder = SortOrder.DESCENDING,
-                        isLoading = false,
-                        hasError = false,
                     ),
                     onAction = {},
                 )
@@ -85,7 +83,7 @@ class MoviesListScreenSnapshotTest(
         paparazzi.snapshot {
             AmroTheme(darkTheme = true) {
                 MoviesListScreen(
-                    state = MoviesListState(isLoading = true),
+                    state = MoviesListState(content = UiState.Loading),
                     onAction = {},
                 )
             }
@@ -97,7 +95,7 @@ class MoviesListScreenSnapshotTest(
         paparazzi.snapshot {
             AmroTheme(darkTheme = true) {
                 MoviesListScreen(
-                    state = MoviesListState(isLoading = false, hasError = true),
+                    state = MoviesListState(content = UiState.Failure(DataError.Network.UNKNOWN)),
                     onAction = {},
                 )
             }

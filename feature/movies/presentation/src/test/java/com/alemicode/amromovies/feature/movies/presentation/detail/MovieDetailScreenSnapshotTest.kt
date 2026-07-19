@@ -1,5 +1,7 @@
 package com.alemicode.amromovies.feature.movies.presentation.detail
 
+import com.alemicode.amromovies.core.common.DataError
+import com.alemicode.amromovies.core.common.UiState
 import com.alemicode.amromovies.core.testing.paparazzi.BasePaparazziMatrixTest
 import com.alemicode.amromovies.core.testing.paparazzi.PaparazziDeviceSize
 import com.alemicode.amromovies.core.testing.paparazzi.PaparazziFontScale
@@ -40,7 +42,7 @@ class MovieDetailScreenSnapshotTest(
         paparazzi.snapshot {
             AmroTheme(darkTheme = false) {
                 MovieDetailScreen(
-                    state = MovieDetailState(movie = sampleMovie, isLoading = false, hasError = false),
+                    state = UiState.Success(sampleMovie),
                     onAction = {},
                     onBackClick = {},
                 )
@@ -53,7 +55,7 @@ class MovieDetailScreenSnapshotTest(
         paparazzi.snapshot {
             AmroTheme(darkTheme = true) {
                 MovieDetailScreen(
-                    state = MovieDetailState(movie = sampleMovie, isLoading = false, hasError = false),
+                    state = UiState.Success(sampleMovie),
                     onAction = {},
                     onBackClick = {},
                 )
@@ -66,7 +68,7 @@ class MovieDetailScreenSnapshotTest(
         paparazzi.snapshot {
             AmroTheme(darkTheme = true) {
                 MovieDetailScreen(
-                    state = MovieDetailState(isLoading = true),
+                    state = UiState.Loading,
                     onAction = {},
                     onBackClick = {},
                 )
@@ -79,7 +81,7 @@ class MovieDetailScreenSnapshotTest(
         paparazzi.snapshot {
             AmroTheme(darkTheme = true) {
                 MovieDetailScreen(
-                    state = MovieDetailState(isLoading = false, hasError = true),
+                    state = UiState.Failure(DataError.Network.UNKNOWN),
                     onAction = {},
                     onBackClick = {},
                 )

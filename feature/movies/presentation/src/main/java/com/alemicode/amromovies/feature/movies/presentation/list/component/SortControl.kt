@@ -96,7 +96,7 @@ fun SortControl(
         IconButton(onClick = onToggleSortOrder) {
             Icon(
                 imageVector = Icons.Default.KeyboardArrowUp,
-                contentDescription = sortOrder.toDisplayLabel(),
+                contentDescription = null,
                 modifier = Modifier.graphicsLayer { rotationZ = orderRotation },
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -110,14 +110,6 @@ private fun SortField.toDisplayLabel(): String = stringResource(
         SortField.POPULARITY -> R.string.sort_field_popularity
         SortField.TITLE -> R.string.sort_field_title
         SortField.RELEASE_DATE -> R.string.sort_field_release_date
-    },
-)
-
-@Composable
-private fun SortOrder.toDisplayLabel(): String = stringResource(
-    when (this) {
-        SortOrder.ASCENDING -> R.string.sort_order_ascending
-        SortOrder.DESCENDING -> R.string.sort_order_descending
     },
 )
 

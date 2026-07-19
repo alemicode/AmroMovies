@@ -29,6 +29,8 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alemicode.amromovies.core.common.DataError
+import com.alemicode.amromovies.core.common.UiState
 import com.alemicode.amromovies.designsystem.components.AmroButton
 import com.alemicode.amromovies.designsystem.components.AmroPosterImage
 import com.alemicode.amromovies.designsystem.theme.AmroShapes
@@ -38,8 +40,6 @@ import com.alemicode.amromovies.designsystem.theme.space
 import com.alemicode.amromovies.feature.movies.presentation.R
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-
-private enum class MovieDetailContentType { LOADING, ERROR, CONTENT }
 
 @Composable
 fun MovieDetailRoot(
@@ -60,7 +60,7 @@ fun MovieDetailRoot(
 
 @Composable
 fun MovieDetailScreen(
-    state: MovieDetailState,
+    state: UiState<MovieDetailUi>,
     onAction: (MovieDetailAction) -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -69,22 +69,14 @@ fun MovieDetailScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-        val contentType = when {
-            state.movie == null && state.isLoading -> MovieDetailContentType.LOADING
-            state.movie == null && state.hasError -> MovieDetailContentType.ERROR
-            else -> MovieDetailContentType.CONTENT
-        }
-
-        Crossfade(targetState = contentType, label = "movieDetailContent") { type ->
-            when (type) {
-                MovieDetailContentType.LOADING -> LoadingContent(onBackClick = onBackClick)
-                MovieDetailContentType.ERROR -> ErrorContent(
+        Crossfade(targetState = state, label = "movieDetailContent") { current ->
+            when (current) {
+                is UiState.Loading -> LoadingContent(onBackClick = onBackClick)
+                is UiState.Failure -> ErrorContent(
                     onBackClick = onBackClick,
                     onRetry = { onAction(MovieDetailAction.OnRetryClick) },
                 )
-                MovieDetailContentType.CONTENT -> state.movie?.let { movie ->
-                    MovieDetailContent(movie = movie, onBackClick = onBackClick)
-                }
+                is UiState.Success -> MovieDetailContent(movie = current.data, onBackClick = onBackClick)
             }
         }
     }
@@ -265,8 +257,8 @@ private fun BackButton(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
 private fun MovieDetailScreenContentPreview() {
     AmroTheme {
         MovieDetailScreen(
-            state = MovieDetailState(
-                movie = MovieDetailUi(
+            state = UiState.Success(
+                MovieDetailUi(
                     id = 1,
                     title = "Interstellar",
                     tagline = "Mankind was born on Earth. It was never meant to die here.",
@@ -283,8 +275,6 @@ private fun MovieDetailScreenContentPreview() {
                     runtime = "2h 49m",
                     releaseDate = "Nov 6, 2014",
                 ),
-                isLoading = false,
-                hasError = false,
             ),
             onAction = {},
             onBackClick = {},
@@ -297,7 +287,7 @@ private fun MovieDetailScreenContentPreview() {
 private fun MovieDetailScreenLoadingPreview() {
     AmroTheme {
         MovieDetailScreen(
-            state = MovieDetailState(isLoading = true),
+            state = UiState.Loading,
             onAction = {},
             onBackClick = {},
         )
@@ -309,7 +299,7 @@ private fun MovieDetailScreenLoadingPreview() {
 private fun MovieDetailScreenErrorPreview() {
     AmroTheme {
         MovieDetailScreen(
-            state = MovieDetailState(isLoading = false, hasError = true),
+            state = UiState.Failure(DataError.Network.UNKNOWN),
             onAction = {},
             onBackClick = {},
         )

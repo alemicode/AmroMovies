@@ -5,10 +5,12 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotNull
 import com.alemicode.amromovies.core.common.DataError
 import com.alemicode.amromovies.core.common.Result
 import com.alemicode.amromovies.feature.movies.data.local.LocalMoviesDataSource
+import com.alemicode.amromovies.feature.movies.data.local.entity.GenreEntity
+import com.alemicode.amromovies.feature.movies.data.local.entity.MovieDetailEntity
+import com.alemicode.amromovies.feature.movies.data.local.entity.MovieEntity
 import com.alemicode.amromovies.feature.movies.data.remote.RemoteMoviesDataSource
 import com.alemicode.amromovies.feature.movies.data.remote.dto.GenreDto
 import com.alemicode.amromovies.feature.movies.data.remote.dto.GenreListResponseDto
@@ -16,6 +18,11 @@ import com.alemicode.amromovies.feature.movies.data.remote.dto.MovieDetailDto
 import com.alemicode.amromovies.feature.movies.data.remote.dto.MovieResultDto
 import com.alemicode.amromovies.feature.movies.data.remote.dto.TrendingMoviesResponseDto
 import com.alemicode.amromovies.feature.movies.domain.model.Movie
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -24,70 +31,111 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
-private val ACTION = GenreDto(id = 28, name = "Action")
-private val COMEDY = GenreDto(id = 35, name = "Comedy")
+private val ACTION = GenreEntity(id = 28, name = "Action")
+private val COMEDY = GenreEntity(id = 35, name = "Comedy")
+private val ACTION_DTO = GenreDto(id = 28, name = "Action")
 
 class MoviesRepositoryImplTest {
 
-    private val fakeDao = FakeMoviesDao()
-    private val fakeApi = FakeTmdbApiService()
+    private val remoteDataSource = mockk<RemoteMoviesDataSource>()
+    private val localDataSource = mockk<LocalMoviesDataSource>()
+    private val trendingMoviesFlow = MutableStateFlow<List<MovieEntity>>(emptyList())
     private lateinit var repository: MoviesRepositoryImpl
 
     @Before
     fun setUp() {
+        every { localDataSource.observeTrendingMovies() } returns trendingMoviesFlow
+        coEvery { localDataSource.getGenres() } returns listOf(ACTION, COMEDY)
+
         repository = MoviesRepositoryImpl(
-            remoteDataSource = RemoteMoviesDataSource(fakeApi),
-            localDataSource = LocalMoviesDataSource(fakeDao),
+            remoteDataSource = remoteDataSource,
+            localDataSource = localDataSource,
         )
+    }
+
+    @Test
+    fun `observeTrendingMovies maps cached entities`() = runTest {
+        trendingMoviesFlow.value = listOf(
+            MovieEntity(
+                id = 1,
+                title = "Cached Movie",
+                posterPath = "/poster.jpg",
+                genreIds = listOf(ACTION.id, 999),
+                popularity = 10.0,
+                releaseDate = "2026-01-01",
+            ),
+        )
+
+        val movies = observeCurrentTrendingMovies()
+
+        assertThat(movies).hasSize(1)
+        assertThat(movies.first().genres.map { it.name }).isEqualTo(listOf("Action"))
     }
 
     @Test
     fun `refreshTrendingMovies merges all 5 pages and resolves genres`() = runTest {
-        fakeApi.genresResponse = GenreListResponseDto(genres = listOf(ACTION, COMEDY))
-        fakeApi.trendingPages = fivePagesOf(
-            1 to listOf(movieResult(id = 1, title = "One", genreIds = listOf(28))),
-            2 to listOf(movieResult(id = 2, title = "Two", genreIds = listOf(35))),
+        // Arrange
+        coEvery { remoteDataSource.getGenres() } returns Result.Success(
+            GenreListResponseDto(genres = listOf(ACTION_DTO))
         )
+        coEvery { remoteDataSource.getTrendingMovies(any()) } answers {
+            Result.Success(trendingResponse(page = firstArg()))
+        }
+        coEvery { localDataSource.insertGenres(any()) } returns Unit
+        coEvery { localDataSource.replaceTrendingMovies(any()) } answers {
+            trendingMoviesFlow.value = firstArg()
+        }
 
+        // Act
         val result = repository.refreshTrendingMovies()
 
+        // Assertion
         assertThat(result).isEqualTo(Result.Success(Unit))
-        val movies = observeCurrentTrendingMovies()
-        assertThat(movies).hasSize(2)
-        assertThat(movies.first { it.id == 1 }.genres.map { it.name }).isEqualTo(listOf("Action"))
-        assertThat(movies.first { it.id == 2 }.genres.map { it.name }).isEqualTo(listOf("Comedy"))
+        coVerify(exactly = 1) { localDataSource.replaceTrendingMovies(any()) }
+        assertThat(observeCurrentTrendingMovies()).hasSize(5)
     }
 
     @Test
     fun `refreshTrendingMovies fails without writing anything when genres fail`() = runTest {
-        fakeApi.genresError = IOException("no internet")
-        fakeApi.trendingPages = fivePagesOf(1 to listOf(movieResult(id = 1)))
+        coEvery { remoteDataSource.getGenres() } returns Result.Error(DataError.Network.UNKNOWN)
+        coEvery { remoteDataSource.getTrendingMovies(any()) } returns Result.Success(
+            trendingResponse(page = 1)
+        )
 
         val result = repository.refreshTrendingMovies()
 
         assertThat(result).isInstanceOf<Result.Error<DataError>>()
+        coVerify(exactly = 0) { localDataSource.replaceTrendingMovies(any()) }
         assertThat(observeCurrentTrendingMovies()).isEmpty()
     }
 
     @Test
     fun `refreshTrendingMovies fails without a partial write when one page fails`() = runTest {
-        fakeApi.genresResponse = GenreListResponseDto(genres = listOf(ACTION))
-        fakeApi.trendingPages = fivePagesOf(
-            1 to listOf(movieResult(id = 1)),
-            2 to listOf(movieResult(id = 2)),
+        coEvery { remoteDataSource.getGenres() } returns Result.Success(
+            GenreListResponseDto(genres = listOf(ACTION_DTO)),
         )
-        fakeApi.trendingErrorPage = 3
+        coEvery { remoteDataSource.getTrendingMovies(any()) } returns Result.Success(
+            trendingResponse(page = 1)
+        )
+        coEvery { remoteDataSource.getTrendingMovies(3) } returns Result.Error(DataError.Network.UNKNOWN)
 
         val result = repository.refreshTrendingMovies()
 
         assertThat(result).isInstanceOf<Result.Error<DataError>>()
+        coVerify(exactly = 0) { localDataSource.replaceTrendingMovies(any()) }
         assertThat(observeCurrentTrendingMovies()).isEmpty()
     }
 
     @Test
     fun `getMovieDetail on success caches the detail and upserts its genres`() = runTest {
-        fakeApi.movieDetailResponses = mapOf(
-            1 to movieDetail(id = 1, title = "One", genres = listOf(ACTION)),
+        coEvery { remoteDataSource.getMovieDetail(1) } returns Result.Success(
+            movieDetail(id = 1, title = "One", genres = listOf(ACTION_DTO))
+        )
+        coEvery { localDataSource.insertGenres(any()) } returns Unit
+        coEvery { localDataSource.insertMovieDetail(any()) } returns Unit
+        coEvery { localDataSource.getMovieDetail(1) } returns movieDetailEntity(
+            id = 1,
+            title = "One"
         )
 
         val result = repository.getMovieDetail(1)
@@ -96,14 +144,16 @@ class MoviesRepositoryImplTest {
         val detail = (result as Result.Success).data
         assertThat(detail.title).isEqualTo("One")
         assertThat(detail.genres.map { it.name }).isEqualTo(listOf("Action"))
-        assertThat(fakeDao.getMovieDetail(1)).isNotNull()
+        coVerify(exactly = 1) { localDataSource.insertMovieDetail(any()) }
     }
 
     @Test
     fun `getMovieDetail falls back to the cache when the network call fails`() = runTest {
-        fakeApi.movieDetailResponses = mapOf(1 to movieDetail(id = 1, title = "Cached"))
-        repository.getMovieDetail(1)
-        fakeApi.movieDetailError = IOException("no internet")
+        coEvery { remoteDataSource.getMovieDetail(1) } returns Result.Error(DataError.Network.NO_INTERNET)
+        coEvery { localDataSource.getMovieDetail(1) } returns movieDetailEntity(
+            id = 1,
+            title = "Cached"
+        )
 
         val result = repository.getMovieDetail(1)
 
@@ -112,13 +162,15 @@ class MoviesRepositoryImplTest {
     }
 
     @Test
-    fun `getMovieDetail propagates the error when nothing is cached and the network fails`() = runTest {
-        fakeApi.movieDetailError = IOException("no internet")
+    fun `getMovieDetail propagates the error when nothing is cached and the network fails`() =
+        runTest {
+            coEvery { remoteDataSource.getMovieDetail(999) } returns Result.Error(DataError.Network.NO_INTERNET)
+            coEvery { localDataSource.getMovieDetail(999) } returns null
 
-        val result = repository.getMovieDetail(999)
+            val result = repository.getMovieDetail(999)
 
-        assertThat(result).isInstanceOf<Result.Error<DataError>>()
-    }
+            assertThat(result).isInstanceOf<Result.Error<DataError>>()
+        }
 
     private fun TestScope.observeCurrentTrendingMovies(): List<Movie> {
         var movies: List<Movie>? = null
@@ -128,23 +180,31 @@ class MoviesRepositoryImplTest {
         return movies ?: error("observeTrendingMovies() never emitted")
     }
 
-    private fun fivePagesOf(vararg pages: Pair<Int, List<MovieResultDto>>): Map<Int, TrendingMoviesResponseDto> {
-        val provided = pages.toMap()
-        return (1..5).associateWith { page ->
-            TrendingMoviesResponseDto(page = page, results = provided[page].orEmpty(), totalPages = 500)
-        }
-    }
-
-    private fun movieResult(id: Int, title: String = "Movie $id", genreIds: List<Int> = emptyList()) = MovieResultDto(
-        id = id,
-        title = title,
-        posterPath = "/poster.jpg",
-        genreIds = genreIds,
-        popularity = 10.0,
-        releaseDate = "2026-01-01",
+    private fun trendingResponse(page: Int) = TrendingMoviesResponseDto(
+        page = page,
+        results = listOf(movieResult(id = page)),
+        totalPages = 500,
     )
 
-    private fun movieDetail(id: Int, title: String = "Movie $id", genres: List<GenreDto> = emptyList()) = MovieDetailDto(
+    private fun movieResult(
+        id: Int,
+        title: String = "Movie $id",
+        genreIds: List<Int> = listOf(28)
+    ) =
+        MovieResultDto(
+            id = id,
+            title = title,
+            posterPath = "/poster.jpg",
+            genreIds = genreIds,
+            popularity = 10.0,
+            releaseDate = "2026-01-01",
+        )
+
+    private fun movieDetail(
+        id: Int,
+        title: String = "Movie $id",
+        genres: List<GenreDto> = emptyList()
+    ) = MovieDetailDto(
         id = id,
         title = title,
         tagline = "Tagline",
@@ -158,6 +218,23 @@ class MoviesRepositoryImplTest {
         status = "Released",
         imdbId = "tt1234567",
         runtime = 120,
+        releaseDate = "2026-01-01",
+    )
+
+    private fun movieDetailEntity(id: Int, title: String = "Movie $id") = MovieDetailEntity(
+        id = id,
+        title = title,
+        tagline = "Tagline",
+        posterPath = "/poster.jpg",
+        genreIds = listOf(28),
+        overview = "Overview",
+        voteAverage = 7.5,
+        voteCount = 100,
+        budget = 1_000_000L,
+        revenue = 2_000_000L,
+        status = "Released",
+        imdbId = "tt1234567",
+        runtimeMinutes = 120,
         releaseDate = "2026-01-01",
     )
 }

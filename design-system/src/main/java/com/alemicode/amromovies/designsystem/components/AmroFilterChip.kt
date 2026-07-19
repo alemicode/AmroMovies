@@ -1,9 +1,8 @@
 package com.alemicode.amromovies.designsystem.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.TweenSpec
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,18 +36,15 @@ fun AmroFilterChip(
         shape = AmroShapes.pill,
         color = containerColor,
     ) {
-        Row(
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor,
             modifier = Modifier.padding(
                 horizontal = MaterialTheme.space.space16,
                 vertical = MaterialTheme.space.space8,
             ),
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = contentColor,
-            )
-        }
+        )
     }
 }
 

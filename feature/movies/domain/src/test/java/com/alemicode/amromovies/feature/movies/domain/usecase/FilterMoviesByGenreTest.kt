@@ -21,21 +21,21 @@ class FilterMoviesByGenreTest {
 
     @Test
     fun `null genre id returns the list unchanged`() {
-        val result = movies.filteredByGenre(genreId = null)
+        val result = movies.filtereMovieByGenre(genreId = null)
 
         assertThat(result).containsExactly(*movies.toTypedArray())
     }
 
     @Test
     fun `filters to only movies containing the given genre id`() {
-        val result = movies.filteredByGenre(genreId = ACTION.id)
+        val result = movies.filtereMovieByGenre(genreId = ACTION.id)
 
         assertThat(result).containsExactly(movies[0], movies[2])
     }
 
     @Test
     fun `genre id absent from every movie returns an empty list`() {
-        val result = movies.filteredByGenre(genreId = DRAMA.id)
+        val result = movies.filtereMovieByGenre(genreId = DRAMA.id)
 
         assertThat(result).isEmpty()
     }

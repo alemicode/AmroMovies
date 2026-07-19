@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alemicode.amromovies.core.common.DataError
+import com.alemicode.amromovies.core.common.UiState
 import com.alemicode.amromovies.designsystem.components.AmroButton
 import com.alemicode.amromovies.designsystem.components.AmroThemeToggleButton
 import com.alemicode.amromovies.designsystem.theme.AmroTheme
@@ -68,10 +70,10 @@ fun MoviesListScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-        val contentType = when {
-            state.movies.isEmpty() && state.isLoading -> MoviesListContentType.LOADING
-            state.movies.isEmpty() && state.hasError -> MoviesListContentType.ERROR
-            else -> MoviesListContentType.CONTENT
+        val contentType = when (state.content) {
+            is UiState.Loading -> MoviesListContentType.LOADING
+            is UiState.Failure -> MoviesListContentType.ERROR
+            is UiState.Success -> MoviesListContentType.CONTENT
         }
 
         Crossfade(targetState = contentType, label = "moviesListContent") { type ->
@@ -80,7 +82,11 @@ fun MoviesListScreen(
                 MoviesListContentType.ERROR -> ErrorContent(
                     onRetry = { onAction(MoviesListAction.OnRetryClick) },
                 )
-                MoviesListContentType.CONTENT -> MoviesListContent(state = state, onAction = onAction)
+                MoviesListContentType.CONTENT -> MoviesListContent(
+                    state = state,
+                    movies = state.content.getDataOrNull().orEmpty(),
+                    onAction = onAction,
+                )
             }
         }
     }
@@ -119,6 +125,7 @@ private fun ErrorContent(onRetry: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun MoviesListContent(
     state: MoviesListState,
+    movies: List<MovieUi>,
     onAction: (MoviesListAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -146,6 +153,7 @@ private fun MoviesListContent(
             onGenreSelected = { onAction(MoviesListAction.OnGenreSelected(it)) },
         )
 
+        // memo
         SortControl(
             sortField = state.sortField,
             sortOrder = state.sortOrder,
@@ -157,7 +165,7 @@ private fun MoviesListContent(
             ),
         )
 
-        if (state.movies.isEmpty()) {
+        if (movies.isEmpty()) {
             EmptyListContent(
                 hasGenreFilter = state.selectedGenreId != null,
                 onShowAllClick = { onAction(MoviesListAction.OnGenreSelected(null)) },
@@ -172,7 +180,7 @@ private fun MoviesListContent(
                 ),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.space.space16),
             ) {
-                items(state.movies, key = { it.id }) { movie ->
+                items(movies, key = { it.id }) { movie ->
                     MovieListItem(
                         movie = movie,
                         onClick = { onAction(MoviesListAction.OnMovieClick(movie.id)) },
@@ -220,20 +228,22 @@ private fun MoviesListScreenContentPreview() {
     AmroTheme {
         MoviesListScreen(
             state = MoviesListState(
-                movies = listOf(
-                    MovieUi(
-                        id = 1,
-                        title = "Spiderman Across The Spider Verse",
-                        posterUrl = null,
-                        genreLabel = "Action • Comedy • Super Hero • Animation",
-                        year = "2023",
-                    ),
-                    MovieUi(
-                        id = 2,
-                        title = "Interstellar",
-                        posterUrl = null,
-                        genreLabel = "Adventure • Mystery • Drama",
-                        year = "2016",
+                content = UiState.Success(
+                    listOf(
+                        MovieUi(
+                            id = 1,
+                            title = "Spiderman Across The Spider Verse",
+                            posterUrl = null,
+                            genreLabel = "Action • Comedy • Super Hero • Animation",
+                            year = "2023",
+                        ),
+                        MovieUi(
+                            id = 2,
+                            title = "Interstellar",
+                            posterUrl = null,
+                            genreLabel = "Adventure • Mystery • Drama",
+                            year = "2016",
+                        ),
                     ),
                 ),
                 genreFilters = listOf(
@@ -254,7 +264,7 @@ private fun MoviesListScreenContentPreview() {
 private fun MoviesListScreenLoadingPreview() {
     AmroTheme {
         MoviesListScreen(
-            state = MoviesListState(isLoading = true),
+            state = MoviesListState(content = UiState.Loading),
             onAction = {},
         )
     }
@@ -265,7 +275,7 @@ private fun MoviesListScreenLoadingPreview() {
 private fun MoviesListScreenErrorPreview() {
     AmroTheme {
         MoviesListScreen(
-            state = MoviesListState(isLoading = false, hasError = true),
+            state = MoviesListState(content = UiState.Failure(DataError.Network.UNKNOWN)),
             onAction = {},
         )
     }
@@ -277,14 +287,12 @@ private fun MoviesListScreenEmptyFilteredPreview() {
     AmroTheme {
         MoviesListScreen(
             state = MoviesListState(
-                movies = emptyList(),
+                content = UiState.Success(emptyList()),
                 genreFilters = listOf(
                     GenreFilterUi(id = null, label = "All", selected = false),
                     GenreFilterUi(id = 99, label = "Documentary", selected = true),
                 ),
                 selectedGenreId = 99,
-                isLoading = false,
-                hasError = false,
             ),
             onAction = {},
         )
@@ -297,9 +305,7 @@ private fun MoviesListScreenEmptyGenericPreview() {
     AmroTheme {
         MoviesListScreen(
             state = MoviesListState(
-                movies = emptyList(),
-                isLoading = false,
-                hasError = false,
+                content = UiState.Success(emptyList()),
             ),
             onAction = {},
         )

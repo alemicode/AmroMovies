@@ -27,7 +27,9 @@ internal fun MovieDetailEntity.toDomain(genresById: Map<Int, Genre>): MovieDetai
     title = title,
     tagline = tagline,
     posterUrl = detailPosterUrl(posterPath),
-    genres = genreIds.mapNotNull(genresById::get),
+    genres = genreIds.mapNotNull { id ->
+        genresById[id]
+    },
     overview = overview,
     voteAverage = voteAverage,
     voteCount = voteCount,

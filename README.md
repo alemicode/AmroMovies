@@ -3,8 +3,8 @@
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202026.02.01-4285F4?logo=jetpackcompose&logoColor=white)
 ![Min SDK](https://img.shields.io/badge/minSdk-24-brightgreen)
-![Tests](https://img.shields.io/badge/tests-53%20passing-success)
-![Coverage](https://img.shields.io/badge/line%20coverage-84.7%25-success)
+![Tests](https://img.shields.io/badge/tests-227%20passing-success)
+![Coverage](https://img.shields.io/badge/line%20coverage-87.0%25-success)
 
 A native Android app for discovering this week's trending movies — a Clean Architecture,
 multi-module MVP built entirely in Jetpack Compose: a trending list with genre filtering and
@@ -55,9 +55,11 @@ caching strategy, why Koin over Hilt, why Retrofit + kotlinx.serialization, and 
 |---|---|
 | `app` | Composition root — `MainActivity`, `NavHost`, Koin startup |
 | `design-system` | Theme, colors, typography, spacing, shapes, reusable Compose components |
-| `core:common` | `Result<D, E>` / `DataError`, `DispatcherProvider` — infra only, no business logic |
+| `core:common` | `Result<D, E>` / `DataError`, `UiState<T>` (`Loading`/`Success`/`Failure`), `DispatcherProvider` — infra only, no business logic |
 | `core:network` | OkHttp/Retrofit/kotlinx.serialization setup, TMDB auth interceptor, `safeApiCall` |
 | `core:testing` | MockK/AssertK/JUnit5 exposed as `api`, plus shared feature-agnostic test rules |
+| `core:testing:coroutines` | `MainDispatcherRule` and other coroutine-test scaffolding |
+| `core:testing:paparazzi` | The device/locale/font-scale Paparazzi matrix (`BasePaparazziMatrixTest`, `BasePaparazziComponentTest`) shared by every screen and `design-system` screenshot test |
 | `feature:movies:domain` | Models, repository interface, use cases — no Android/Room/Retrofit deps |
 | `feature:movies:data` | TMDB DTOs, Room entities/DAO, repository implementation |
 | `feature:movies:presentation` | ViewModels, Compose screens, nav graph |
@@ -75,6 +77,9 @@ caching strategy, why Koin over Hilt, why Retrofit + kotlinx.serialization, and 
 **Presentation pattern (MVI)**, applied consistently across `feature:movies:presentation`:
 
 - A single `StateFlow<State>` per screen — no independent `MutableStateFlow`s combined together.
+- Async data within that state is a shared `core:common` `UiState<T>` (`Loading` / `Success` /
+  `Failure`) rather than ad hoc `isLoading`/`hasError` booleans, so every screen renders its
+  loading/error/content branches the same way.
 - A sealed `Action` interface capturing user intent.
 - The `ViewModel` is the only thing allowed to mutate state, via `.update { it.copy(...) }`.
 - Navigation-triggering actions are intercepted directly in the screen's Root composable and
@@ -101,19 +106,42 @@ Full version numbers live in [`gradle/libs.versions.toml`](./gradle/libs.version
 
 ## Testing
 
-53 tests across three layers:
+227 tests across three layers:
 
 | Layer | Tooling | Covers |
 |---|---|---|
 | Unit test | JUnit5, MockK, AssertK | Mappers and use cases (`SortMovies`, `FilterMoviesByGenre`, `RefreshTrendingMoviesUseCase`); the repository's offline-first fallback behavior; `safeApiCall`'s exception-to-`DataError` mapping; and both ViewModels, including their lazily-shared `stateIn(WhileSubscribed)` state |
-| Screenshot | Paparazzi | The movie detail screen's content (light + dark theme), loading, and error states — runs on the JVM, no emulator required |
+| Screenshot | Paparazzi | Both feature screens (movies list, movie detail) — content/light/dark, loading, error, and empty states — plus every reusable `design-system` component (`AmroButton`, `AmroFilterChip`, `AmroPill`, `AmroPosterImage`, `AmroThemeToggleButton`), each rendered across a full device/locale/font-scale matrix. Runs on the JVM, no emulator required |
 | Instrumented UI | Compose UI Test | Real click/navigation-callback behavior on a device or emulator |
 
 ```bash
-./gradlew test                                    # unit tests
-./gradlew :feature:movies:presentation:verifyPaparazziDebug   # screenshot tests
-./gradlew connectedDebugAndroidTest                # instrumented UI tests (needs a device/emulator)
+./gradlew test                                               # unit tests
+./gradlew :feature:movies:presentation:verifyPaparazziDebug  # screen screenshot tests
+./gradlew :design-system:verifyPaparazziDebug                # component screenshot tests
+./gradlew connectedDebugAndroidTest                          # instrumented UI tests (needs device/emulator)
 ```
+
+### Scaling Paparazzi across the matrix, not the test count
+
+Screenshot suites usually rot into one of two shapes: either they only cover a single device/locale
+(and RTL or large-font regressions ship unnoticed), or every screen hand-writes its own loop over
+device × locale × font size, so adding a new locale means touching every test file. Neither scales
+past a couple of screens.
+
+`core:testing:paparazzi` factors the matrix out instead: `PaparazziDeviceSize`, `PaparazziLocaleConfig`
+(including Farsi for RTL), and `PaparazziFontScale` are plain enums combined by `deviceConfigOf(...)`
+into a single `DeviceConfig`. Two small base classes drive `TestParameterInjector` over that matrix:
+
+- `BasePaparazziMatrixTest(deviceSize, locale, fontScale)` — for full screens, where phone vs.
+  tablet width genuinely changes layout.
+- `BasePaparazziComponentTest(locale, fontScale)` — for standalone `design-system` components,
+  which are wrap-content and don't vary by device width, so that dimension is dropped rather than
+  wastefully re-rendering identical output per device size.
+
+A screen or component test then just declares its states as normal `@Test` methods; `@TestParameter`
+constructor params multiply every one of them across the injected matrix automatically. Adding a new
+locale or font scale is a one-line enum addition in `core:testing:paparazzi` — every existing and
+future Paparazzi test in the project picks it up with zero per-test changes.
 
 ### Coverage
 
@@ -122,9 +150,9 @@ Measured with [Kover](https://github.com/Kotlin/kotlinx-kover), merged across `a
 
 | Metric | Coverage |
 |---|---|
-| Line | 84.7% (869/1026) |
-| Instruction | 78.3% (8149/10412) |
-| Class | 74.3% (78/105) |
+| Line | 87.0% (860/989) |
+| Instruction | 78.5% (7910/10069) |
+| Class | 75.0% (75/100) |
 
 ```bash
 ./gradlew koverHtmlReport   # merged HTML report at build/reports/kover/html/index.html
@@ -145,8 +173,9 @@ Minimum SDK 24, compile/target SDK 37.
 
 ## Known limitations / next steps
 
-- Error state is a plain boolean flag rather than a localized, resource-backed message type —
-  fine for an MVP, but a `UiText`-style abstraction would be the natural next step for i18n.
+- `DataError` surfaces as a generic message rather than a localized, resource-backed one — fine
+  for an MVP, but a `UiText`-style mapping from `DataError` to string resources would be the
+  natural next step for i18n.
 - No pagination beyond the fixed 100 trending movies, per the brief.
 - Single data source (TMDB). The architecture — a repository interface, per-feature data
   ownership — is intentionally shaped to make adding a second source additive rather than a

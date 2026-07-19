@@ -1,7 +1,5 @@
 package com.alemicode.amromovies.core.common
 
-import kotlinx.coroutines.flow.MutableStateFlow
-
 sealed interface UiState<out T> {
     data object Loading : UiState<Nothing>
     data class Success<out T>(val data: T) : UiState<T>

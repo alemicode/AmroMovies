@@ -3,11 +3,12 @@ package com.alemicode.amromovies.feature.movies.presentation.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alemicode.amromovies.core.common.Result
+import com.alemicode.amromovies.core.common.UiState
 import com.alemicode.amromovies.feature.movies.domain.model.Movie
 import com.alemicode.amromovies.feature.movies.domain.model.SortOrder
 import com.alemicode.amromovies.feature.movies.domain.usecase.GetTrendingMoviesUseCase
 import com.alemicode.amromovies.feature.movies.domain.usecase.RefreshTrendingMoviesUseCase
-import com.alemicode.amromovies.feature.movies.domain.usecase.filteredByGenre
+import com.alemicode.amromovies.feature.movies.domain.usecase.filtereMovieByGenre
 import com.alemicode.amromovies.feature.movies.domain.usecase.sortedByField
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,7 +32,11 @@ class MoviesListViewModel(
             observeMovies()
             refresh()
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), _state.value)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = _state.value
+        )
 
     fun onAction(action: MoviesListAction) {
         when (action) {
@@ -39,10 +44,12 @@ class MoviesListViewModel(
                 _state.update { it.copy(selectedGenreId = action.genreId) }
                 applyFilterAndSort()
             }
+
             is MoviesListAction.OnSortFieldSelected -> {
                 _state.update { it.copy(sortField = action.field) }
                 applyFilterAndSort()
             }
+
             MoviesListAction.OnToggleSortOrder -> {
                 _state.update {
                     val nextOrder = if (it.sortOrder == SortOrder.ASCENDING) {
@@ -54,6 +61,7 @@ class MoviesListViewModel(
                 }
                 applyFilterAndSort()
             }
+
             MoviesListAction.OnRetryClick -> refresh()
             is MoviesListAction.OnMovieClick -> Unit
         }
@@ -71,10 +79,12 @@ class MoviesListViewModel(
     private fun applyFilterAndSort() {
         _state.update { current ->
             current.copy(
-                movies = cachedMovies
-                    .filteredByGenre(current.selectedGenreId)
-                    .sortedByField(current.sortField, current.sortOrder)
-                    .map { it.toMovieUi() },
+                content = UiState.Success(
+                    cachedMovies
+                        .filtereMovieByGenre(current.selectedGenreId)
+                        .sortedByField(current.sortField, current.sortOrder)
+                        .map { it.toMovieUi() },
+                ),
                 genreFilters = cachedMovies.toGenreFilters(current.selectedGenreId),
             )
         }
@@ -82,10 +92,16 @@ class MoviesListViewModel(
 
     private fun refresh() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            when (refreshTrendingMovies()) {
-                is Result.Success -> _state.update { it.copy(isLoading = false, hasError = false) }
-                is Result.Error -> _state.update { it.copy(isLoading = false, hasError = cachedMovies.isEmpty()) }
+            if (cachedMovies.isEmpty()) {
+                _state.update { it.copy(content = UiState.Loading) }
+            }
+            when (val result = refreshTrendingMovies()) {
+                is Result.Success -> Unit
+                is Result.Error -> {
+                    if (cachedMovies.isEmpty()) {
+                        _state.update { it.copy(content = UiState.Failure(result.error)) }
+                    }
+                }
             }
         }
     }

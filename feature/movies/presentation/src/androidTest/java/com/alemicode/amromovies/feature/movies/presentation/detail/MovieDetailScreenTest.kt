@@ -10,6 +10,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import assertk.assertThat
 import assertk.assertions.isTrue
+import com.alemicode.amromovies.core.common.DataError
+import com.alemicode.amromovies.core.common.UiState
 import com.alemicode.amromovies.designsystem.theme.AmroTheme
 import com.alemicode.amromovies.feature.movies.presentation.R
 import org.junit.Rule
@@ -49,7 +51,7 @@ class MovieDetailScreenTest {
         composeTestRule.setContent {
             AmroTheme {
                 MovieDetailScreen(
-                    state = MovieDetailState(movie = sampleMovie, isLoading = false, hasError = false),
+                    state = UiState.Success(sampleMovie),
                     onAction = {},
                     onBackClick = {},
                 )
@@ -68,7 +70,7 @@ class MovieDetailScreenTest {
         composeTestRule.setContent {
             AmroTheme {
                 MovieDetailScreen(
-                    state = MovieDetailState(isLoading = false, hasError = true),
+                    state = UiState.Failure(DataError.Network.UNKNOWN),
                     onAction = { action -> retryClicked = action is MovieDetailAction.OnRetryClick },
                     onBackClick = {},
                 )
@@ -86,7 +88,7 @@ class MovieDetailScreenTest {
         composeTestRule.setContent {
             AmroTheme {
                 MovieDetailScreen(
-                    state = MovieDetailState(movie = sampleMovie, isLoading = false, hasError = false),
+                    state = UiState.Success(sampleMovie),
                     onAction = {},
                     onBackClick = { backClicked = true },
                 )

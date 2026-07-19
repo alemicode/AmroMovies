@@ -14,6 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map as mapFlow
 
 private const val TRENDING_PAGE_COUNT = 5
@@ -59,8 +60,11 @@ internal class MoviesRepositoryImpl(
                 localDataSource.insertGenres(remoteResult.data.genres.map { it.toEntity() })
                 localDataSource.insertMovieDetail(remoteResult.data.toEntity())
             }
+
             is Result.Error -> {
-                if (localDataSource.getMovieDetail(movieId) == null) return Result.Error(remoteResult.error)
+                if (localDataSource.getMovieDetail(movieId) == null) return Result.Error(
+                    remoteResult.error
+                )
             }
         }
 
