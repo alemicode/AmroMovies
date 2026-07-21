@@ -4,7 +4,7 @@
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202026.02.01-4285F4?logo=jetpackcompose&logoColor=white)
 ![Min SDK](https://img.shields.io/badge/minSdk-24-brightgreen)
 ![Tests](https://img.shields.io/badge/tests-227%20passing-success)
-![Coverage](https://img.shields.io/badge/line%20coverage-87.0%25-success)
+![Coverage](https://img.shields.io/badge/line%20coverage-85.7%25-success)
 
 A native Android app for discovering this week's trending movies — a Clean Architecture,
 multi-module MVP built entirely in Jetpack Compose: a trending list with genre filtering and
@@ -40,6 +40,11 @@ an interview), see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 - **Error handling** — explicit loading/error/content states with a retry action, at both the
   list and detail screen.
 - **Light/dark theme** — follows the system setting by default, with a manual toggle.
+- **Accessibility** — every interactive or informational element exposes a `contentDescription`:
+  localized via string resources where the copy is static (e.g. the back button, sort-order
+  toggle), and driven by real data where it isn't (a poster's description is the movie's title).
+  Purely decorative icons are explicitly `contentDescription = null` so TalkBack doesn't announce
+  redundant noise. See [Accessibility](#accessibility) below.
 
 ## Architecture
 
@@ -150,14 +155,35 @@ Measured with [Kover](https://github.com/Kotlin/kotlinx-kover), merged across `a
 
 | Metric | Coverage |
 |---|---|
-| Line | 87.0% (860/989) |
-| Instruction | 78.5% (7910/10069) |
-| Class | 75.0% (75/100) |
+| Line | 85.7% (890/1039) |
+| Instruction | 77.2% (7888/10223) |
+| Class | 72.8% (75/103) |
 
 ```bash
 ./gradlew koverHtmlReport   # merged HTML report at build/reports/kover/html/index.html
 ./gradlew koverXmlReport    # merged XML report at build/reports/kover/report.xml
 ```
+
+## Accessibility
+
+TalkBack support is treated as a normal part of the UI, not a pass at the end:
+
+- **Every `contentDescription` is either localized or data-driven — never a hardcoded literal.**
+  Static labels (navigation icons, toggle buttons) resolve through `stringResource(R.string...)`,
+  following the same "no hardcoded UI strings" rule applied to visible text (see
+  [`strings.xml`](./feature/movies/presentation/src/main/res/values/strings.xml) and
+  [`design-system`'s](./design-system/src/main/res/values/strings.xml)). Dynamic content — a
+  poster's description — is the movie's own title, not a generic placeholder.
+- **Stateful icon-only controls describe the current state, not just the icon.** The sort-order
+  toggle in `SortControl` announces "Ascending"/"Descending" rather than a mute arrow glyph, and
+  the theme toggle announces "Switch to light/dark theme" via
+  `Modifier.clearAndSetSemantics { contentDescription = ...; role = Role.Button }` — the emoji
+  glyph it renders (☀/🌙) is otherwise meaningless to a screen reader.
+- **Decorative icons are explicitly silenced**, e.g. the dropdown chevron next to a sort field's
+  visible label sets `contentDescription = null` so TalkBack doesn't double-announce it.
+- **Verified across locales, not just English.** The Paparazzi matrix (see below) renders every
+  screen and component under Farsi (RTL) and larger font scales, catching layout breaks that
+  English-only, default-font-scale screenshots would miss.
 
 ## Getting started
 
@@ -180,6 +206,14 @@ Minimum SDK 24, compile/target SDK 37.
 - Single data source (TMDB). The architecture — a repository interface, per-feature data
   ownership — is intentionally shaped to make adding a second source additive rather than a
   rewrite, but no second source is wired up yet.
+- No CI pipeline. `./gradlew test`, the Paparazzi suites, and `koverXmlReport` all run cleanly
+  locally and would drop into a GitHub Actions workflow largely as-is; wiring that up is the
+  natural next step for enforcing the coverage/test bar on every PR rather than by discipline.
+- Detekt is on the version catalog (`libs.plugins.detekt`) but not yet applied to any module —
+  declared for when static analysis is wired in, not a working gate today.
+- `release` builds run with R8/resource shrinking off (`optimization { enable = false }` in
+  `app/build.gradle.kts`), so the coverage/test badges above describe the debug build's source,
+  not a minified release APK; turning shrinking on plus a baseline profile is unstarted.
 
 ---
 
